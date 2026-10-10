@@ -1,0 +1,17 @@
+# QuickDrop frontend (статика гана). Signaling сервери өзүнчө хостто иштейт.
+# Netlify UI'да чөйрө өзгөрмөсүн коюңуз:
+#   QUICKDROP_API_URL = https://<signaling-сервердин-домени>
+#   QUICKDROP_ICE_SERVERS = [{"urls":"stun:stun.l.google.com:19302"}]   (ыктыярдуу)
+
+[build]
+  command = "node scripts/build.js"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Телефон QR'дан /join/<id> ачат: ар дайым join.html берилет (URL өзгөрбөйт)
+[[redirects]]
+  from = "/join/*"
+  to = "/join.html"
+  status = 200

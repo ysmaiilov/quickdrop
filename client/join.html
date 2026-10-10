@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f6fb">
+  <title>QuickDrop - Туташуу</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="brand">
+      <div class="brand__logo" aria-hidden="true">⇄</div>
+      <h1 class="brand__name">QuickDrop</h1>
+    </header>
+
+    <!-- Байланыштын абалы -->
+    <div class="status-badge" id="statusBadge" data-tone="neutral" role="status" aria-live="polite">
+      <span class="status-badge__icon" id="statusBadgeIcon" aria-hidden="true">⏳</span>
+      <span class="status-badge__text" id="statusBadgeText">Күтүүдө</span>
+      <span class="status-badge__spinner" id="statusBadgeSpinner" aria-hidden="true" hidden></span>
+    </div>
+
+    <!-- Негизги статус картасы -->
+    <section class="connect" id="statusCard">
+      <div class="status-icon" id="icon" aria-hidden="true">⏳</div>
+      <p class="connect__title" id="title">Компьютерге туташуу</p>
+      <p class="connect__info" id="info">Текшерилүүдө...</p>
+
+      <!-- Ката же ийгилик билдирүүсү -->
+      <p class="message" id="message" role="alert" hidden></p>
+
+      <!-- Бул кнопка басылганга чейин эч нерсе жөнөтүлбөйт -->
+      <button class="btn" id="connectBtn" type="button" hidden>Туташуу</button>
+
+      <!-- Туташкандан кийин: 📱 Телефон → 💻 Компьютер -->
+      <p class="direction-label" id="directionLabel" hidden>📱 Телефон → 💻 Компьютер</p>
+      <div class="tiles">
+        <button class="tile" id="textBtn" type="button" hidden>
+          <span class="tile__icon" aria-hidden="true">📝</span>
+          <span>Текст</span>
+        </button>
+        <button class="tile" id="imageBtn" type="button" hidden>
+          <span class="tile__icon" aria-hidden="true">🖼️</span>
+          <span>Сүрөт</span>
+        </button>
+        <button class="tile" id="fileBtn" type="button" hidden>
+          <span class="tile__icon" aria-hidden="true">📄</span>
+          <span>Файл</span>
+        </button>
+      </div>
+
+      <button class="btn btn--danger" id="disconnectBtn" type="button" hidden>Байланышты үзүү</button>
+    </section>
+
+    <!-- Текст жөнөтүү -->
+    <section class="connect connect--sheet" id="textCard" hidden>
+      <button class="back-link" id="backBtn" type="button">← Артка</button>
+      <p class="connect__title">📝 Текст жөнөтүү</p>
+      <p class="sheet-route">📱 Телефон → 💻 Компьютер</p>
+      <textarea class="text-input" id="textInput" maxlength="5000"
+                aria-label="Компьютерге жөнөтүлө турган текст"
+                placeholder="Текстти ушул жерге жазыңыз..."></textarea>
+      <p class="message" id="textMessage" role="alert" hidden></p>
+      <button class="btn" id="sendTextBtn" type="button">Жөнөтүү</button>
+    </section>
+
+    <!-- Сүрөт жөнөтүү -->
+    <section class="connect connect--sheet" id="imageCard" hidden>
+      <button class="back-link" id="imageBackBtn" type="button">← Артка</button>
+      <p class="connect__title">🖼️ Сүрөт жөнөтүү</p>
+      <p class="sheet-route">📱 Телефон → 💻 Компьютер</p>
+
+      <!-- Файл тандоо талаасы жашыруун, кнопка аркылуу ачылат -->
+      <input type="file" id="imageInput" accept="image/*" hidden>
+      <button class="btn btn--ghost" id="pickImageBtn" type="button">Сүрөт тандоо</button>
+
+      <!-- Тандалган сүрөттүн preview'су, аты жана өлчөмү -->
+      <div class="file-preview" id="imagePreview" hidden>
+        <img class="file-preview__img" id="imagePreviewImg" alt="Тандалган сүрөт">
+        <p class="file-preview__name" id="imageName"></p>
+        <p class="file-preview__size" id="imageSize"></p>
+      </div>
+
+      <!-- Жөнөтүү прогресси -->
+      <div class="progress" id="imageProgress" hidden>
+        <div class="progress__bar" id="imageProgressBar"></div>
+      </div>
+      <p class="progress__label" id="imageProgressLabel" hidden></p>
+
+      <p class="message" id="imageMessage" role="alert" hidden></p>
+      <button class="btn" id="sendImageBtn" type="button" disabled>Жөнөтүү</button>
+    </section>
+
+    <!-- Жалпы файл жөнөтүү -->
+    <section class="connect connect--sheet" id="fileCard" hidden>
+      <button class="back-link" id="fileBackBtn" type="button">← Артка</button>
+      <p class="connect__title">📄 Файл жөнөтүү</p>
+      <p class="sheet-route">📱 Телефон → 💻 Компьютер</p>
+
+      <!-- Файл тандоо талаасы жашыруун, кнопка аркылуу ачылат -->
+      <input type="file" id="fileInput" hidden>
+      <button class="btn btn--ghost" id="pickFileBtn" type="button">Файл тандоо</button>
+      <p class="file-hint">PDF, DOC, XLS, PPT, ZIP, TXT жана башка файлдар</p>
+
+      <!-- Тандалган файлдын аты жана көлөмү -->
+      <div class="file-info" id="fileInfo" hidden>
+        <span class="file-info__icon" id="fileIcon" aria-hidden="true">📄</span>
+        <div>
+          <p class="file-info__name" id="fileName"></p>
+          <p class="file-info__size" id="fileSize"></p>
+        </div>
+      </div>
+
+      <!-- Жөнөтүү прогресси -->
+      <div class="progress" id="fileProgress" hidden>
+        <div class="progress__bar" id="fileProgressBar"></div>
+      </div>
+      <p class="progress__label" id="fileProgressLabel" hidden></p>
+
+      <p class="message" id="fileMessage" role="alert" hidden></p>
+      <button class="btn" id="sendFileBtn" type="button" disabled>Жөнөтүү</button>
+    </section>
+
+    <!-- 💻 Компьютер → 📱 Телефон: компьютерден келген маалымат -->
+    <section class="received" id="inbox" hidden>
+      <header class="card-head">
+        <p class="card-head__route" aria-hidden="true">💻 → 📱</p>
+        <div>
+          <h2 class="card-head__title">Компьютер → Телефон</h2>
+          <p class="card-head__subtitle">Компьютерден келген маалымат</p>
+        </div>
+      </header>
+
+      <p class="message message--success" id="inboxStatus" role="status" hidden></p>
+
+      <!-- Файл келип жатканда прогресс -->
+      <div class="receive-progress" id="inboxProgress" hidden>
+        <p class="receive-progress__name" id="inboxProgressName"></p>
+        <div class="progress">
+          <div class="progress__bar" id="inboxProgressBar"></div>
+        </div>
+        <p class="progress__label" id="inboxProgressLabel"></p>
+      </div>
+
+      <ul class="received__list" id="inboxList"
+          data-empty="Компьютерден жөнөтүлгөн текст, сүрөт жана файлдар ушул жерде көрүнөт"></ul>
+    </section>
+  </main>
+
+  <script src="/config.js"></script>
+  <script src="/api.js"></script>
+  <script src="/peer.js"></script>
+  <script src="/security.js"></script>
+  <script src="/transfer.js"></script>
+  <script src="/received.js"></script>
+  <script src="/status.js"></script>
+  <script src="/join-text.js"></script>
+  <script src="/join-image.js"></script>
+  <script src="/join-file.js"></script>
+  <script src="/join.js"></script>
+</body>
+</html>

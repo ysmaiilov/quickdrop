@@ -1,0 +1,1114 @@
+/* QuickDrop: дизайн (11-этап).
+   Принциптер: минималисттик, таза, mobile-first, AirDrop сыяктуу түшүнүктүү.
+   Бардык түстөр жана өлчөмдөр төмөнкү өзгөрмөлөрдө: бир жерден өзгөртүүгө болот. */
+
+:root {
+  /* Түстөр */
+  --color-bg: #f4f6fb;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-soft: #eff6ff;
+  --color-primary-line: #bfdbfe;
+
+  --color-success-soft: #dcfce7;
+  --color-success-line: #bbf7d0;
+  --color-success-text: #166534;
+
+  --color-warning-soft: #fef3c7;
+  --color-warning-line: #fde68a;
+  --color-warning-text: #92400e;
+
+  --color-danger-soft: #fef2f2;
+  --color-danger-line: #fecaca;
+  --color-danger-text: #b91c1c;
+
+  /* Формалар жана көлөкөлөр */
+  --radius-lg: 24px;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08);
+
+  /* Өлчөмдөр */
+  --tap-size: 52px; /* кнопканын минималдуу бийиктиги (манжа менен басууга ыңгайлуу) */
+  --qr-size: min(260px, 68vw);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ===== Базалык стилдер ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* hidden атрибуту ар дайым жеңет (display берилген элементтерде да) */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(28px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.45;
+  color: var(--color-text);
+  background:
+    radial-gradient(900px 420px at 50% -140px, #dbe7ff 0%, rgba(219, 231, 255, 0) 70%),
+    var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Беттин түзүмү ===== */
+.app {
+  width: 100%;
+  max-width: 480px;
+  margin-block: auto; /* кыска болсо ортодо, узун болсо жогоруда */
+}
+
+/* Көрүнүп турган карталардын ортосундагы боштук (телефондо: экран жана алынган маалымат) */
+.app > section:not([hidden]) ~ section:not([hidden]) {
+  margin-top: 16px;
+}
+
+/* Транспорт карталары: телефондо астын-үстүн, кең экранда эки тарап */
+.transfer-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* ===== Логотип ===== */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.brand__logo {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.brand__name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ===== Абал көрсөткүчү (Күтүүдө, Туташууда, Туташты ...) ===== */
+.status-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 20px;
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  transition:
+    color 0.2s,
+    background-color 0.2s,
+    border-color 0.2s;
+}
+
+.status-badge[data-tone='progress'] {
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-line);
+}
+
+.status-badge[data-tone='success'] {
+  color: var(--color-success-text);
+  background: var(--color-success-soft);
+  border-color: var(--color-success-line);
+}
+
+.status-badge[data-tone='error'] {
+  color: var(--color-warning-text);
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning-line);
+}
+
+/* Байланыш үзүлдү: кызыл түс, "Ката"дан айырмалоо үчүн */
+.status-badge[data-state='disconnected'] {
+  color: var(--color-danger-text);
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-line);
+}
+
+.status-badge__icon {
+  line-height: 1;
+}
+
+.status-badge__text {
+  text-align: left;
+  word-break: break-word;
+}
+
+/* Жүктөө абалындагы айлануучу белги */
+.status-badge__spinner {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ===== Карточкалар ===== */
+.connect,
+.send-panel,
+.received {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.connect {
+  padding: 28px 20px;
+  text-align: center;
+}
+
+/* Телефондогу жөнөтүү экрандары (текст, сүрөт, файл) */
+.connect--sheet {
+  padding: 16px 20px 24px;
+  text-align: left;
+}
+
+.connect--sheet .connect__title {
+  margin-bottom: 4px;
+  font-size: 1.2rem;
+}
+
+/* Телефондогу экрандын астыңкы сабы: багыт */
+.sheet-route {
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.connect:not([hidden]),
+.send-panel:not([hidden]),
+.received:not([hidden]) {
+  animation: rise 0.28s var(--ease);
+}
+
+.connect__title {
+  margin-bottom: 18px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.connect__info {
+  margin-top: 16px;
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+
+/* Калган убакыт: кичинекей чип */
+.connect__timer {
+  min-height: 34px;
+  margin-top: 8px;
+}
+
+.connect__timer:empty {
+  display: none;
+}
+
+.connect__timer:not(:empty) {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border-radius: 999px;
+}
+
+/* Телефонду туташтыруунун 3 кадамы (QR күтүп турганда гана көрүнөт) */
+.steps {
+  display: none;
+  gap: 10px;
+  max-width: 320px;
+  margin: 18px auto 0;
+  padding: 0;
+  text-align: left;
+  list-style: none;
+  counter-reset: step;
+}
+
+body[data-state='waiting'] .steps {
+  display: grid;
+}
+
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step);
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border-radius: 50%;
+}
+
+.steps strong {
+  color: var(--color-text);
+}
+
+/* Эки кнопка катары (Уруксат берүү / Баш тартуу) */
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ===== QR-код (негизги элемент) ===== */
+.qr {
+  display: grid;
+  place-items: center;
+  width: var(--qr-size);
+  height: var(--qr-size);
+  margin: 0 auto;
+  background: var(--color-surface-2);
+  border: 2px dashed var(--color-border);
+  border-radius: 20px;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    opacity 0.2s;
+}
+
+.qr__label {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #cbd5e1;
+}
+
+/* Чыныгы QR көрүнүп турганда */
+.qr--active {
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  box-shadow:
+    0 0 0 8px var(--color-primary-soft),
+    var(--shadow-sm);
+}
+
+.qr--active img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.qr--expired {
+  opacity: 0.45;
+}
+
+/* Туташуу жолунда: QR ордунда чоң белги (⏳, 🔐, ✓) */
+.qr--connected {
+  width: 112px;
+  height: 112px;
+  background: var(--color-success-soft);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 8px rgba(22, 163, 74, 0.12);
+}
+
+.qr__check {
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--color-success-text);
+  animation: pop 0.35s var(--ease);
+}
+
+body[data-state='connecting'] .qr--connected {
+  background: var(--color-primary-soft);
+  box-shadow: none;
+  animation: pulse-ring 1.6s ease-out infinite;
+}
+
+/* Тастыктоо коду: чоң сандар */
+.qr.qr--code {
+  width: fit-content;
+  min-width: 200px;
+  height: 96px;
+  padding: 0 28px;
+  border-radius: 22px;
+  background: var(--color-primary-soft);
+}
+
+.qr--code .qr__check {
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-dark);
+}
+
+/* Телефондогу чоң белги */
+.status-icon {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 16px;
+  font-size: 2.5rem;
+  line-height: 1;
+  background: var(--color-primary-soft);
+  border-radius: 50%;
+}
+
+body[data-state='connecting'] .status-icon {
+  animation: pulse-ring 1.6s ease-out infinite;
+}
+
+body[data-state='connected'] .status-icon {
+  background: var(--color-success-soft);
+  animation: pop 0.35s var(--ease);
+}
+
+body[data-state='failed'] .status-icon {
+  background: var(--color-warning-soft);
+}
+
+body[data-state='disconnected'] .status-icon {
+  background: var(--color-danger-soft);
+}
+
+.status-icon.status-icon--code {
+  width: fit-content;
+  min-width: 170px;
+  height: 80px;
+  padding: 0 28px;
+  font-size: 2.3rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-dark);
+  border-radius: 22px;
+}
+
+/* ===== Кнопкалар ===== */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--tap-size);
+  margin-top: 16px;
+  padding: 12px 20px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.28);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s,
+    transform 0.1s,
+    box-shadow 0.15s,
+    opacity 0.15s;
+}
+
+.btn:hover {
+  background: var(--color-primary-dark);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn--ghost {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.btn--ghost:hover {
+  background: var(--color-surface-2);
+}
+
+.btn--danger {
+  color: var(--color-danger-text);
+  background: transparent;
+  border-color: var(--color-danger-line);
+  box-shadow: none;
+}
+
+.btn--danger:hover {
+  background: var(--color-danger-soft);
+}
+
+.btn:focus-visible,
+.tile:focus-visible,
+.back-link:focus-visible,
+.received__copy:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+/* "← Артка" (телефондогу экрандардын жогорку сол жагында) */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 0 0 8px -10px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.back-link:hover {
+  background: var(--color-primary-soft);
+}
+
+.back-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Түр тандоо плиткалары (Текст, Сүрөт, Файл) ===== */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 88px;
+  padding: 12px 8px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
+}
+
+.tile__icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.tile:hover {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-line);
+}
+
+.tile:active {
+  transform: scale(0.97);
+}
+
+.tile--active {
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Багыт жазуусу: 📱 Телефон → 💻 Компьютер */
+.direction-label {
+  margin: 24px 0 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+/* ===== Формалар ===== */
+.text-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  font: inherit;
+  font-size: 1rem; /* 16px: iPhone'до масштабдын өзгөрүшүнө жол бербейт */
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  resize: vertical;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.text-input::placeholder {
+  color: #94a3b8;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.text-input:disabled {
+  color: var(--color-muted);
+  background: var(--color-surface-2);
+}
+
+/* Файл сүйрөп таштоочу аймак (компьютерде) */
+.dropzone {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 22px 16px;
+  text-align: center;
+  background: var(--color-surface-2);
+  border: 2px dashed #cbd5e1;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.dropzone::before {
+  content: '📥';
+  font-size: 1.9rem;
+  line-height: 1.2;
+}
+
+.dropzone:hover,
+.dropzone--active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.dropzone--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dropzone__text {
+  font-weight: 600;
+}
+
+.dropzone__or {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.dropzone .btn {
+  width: auto;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 10px 22px;
+}
+
+/* Файл тандалганда дропзона кичирейет (:has колдоого алынбаса, жөн эле чоң калат) */
+.send-block:has(.file-info:not([hidden])) .dropzone {
+  padding: 12px 16px;
+}
+
+.send-block:has(.file-info:not([hidden])) .dropzone::before,
+.send-block:has(.file-info:not([hidden])) .dropzone__text,
+.send-block:has(.file-info:not([hidden])) .dropzone__or {
+  display: none;
+}
+
+.send-block:has(.file-info:not([hidden])) .dropzone .btn {
+  margin-top: 0;
+}
+
+.send-block {
+  margin-top: 16px;
+}
+
+.send-block > .btn,
+.send-block > .message {
+  margin-top: 12px;
+}
+
+/* Тандалган файл: аты, көлөмү, "Тандалды" белгиси */
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  text-align: left;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-line);
+  border-radius: var(--radius);
+  animation: rise 0.25s var(--ease);
+}
+
+.file-info::after {
+  content: '✓ Тандалды';
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: #dbeafe;
+  border-radius: 999px;
+}
+
+.file-info__icon {
+  flex-shrink: 0;
+  font-size: 2rem;
+}
+
+.file-info__thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.file-info__name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.file-info__size {
+  margin-top: 2px;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+/* Жөнөтүү башталганда белги өзгөрөт (Тандалды -> Жөнөтүлүүдө) */
+.send-block:has(.progress:not([hidden])) .file-info::after,
+.connect--sheet:has(.progress:not([hidden])) .file-info::after,
+.connect--sheet:has(.progress:not([hidden])) .file-preview::after {
+  content: '📤 Жөнөтүлүүдө';
+}
+
+/* Телефон: тандалган сүрөттүн preview'су */
+.file-preview {
+  margin-top: 14px;
+  padding: 12px;
+  text-align: center;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-line);
+  border-radius: var(--radius);
+  animation: rise 0.25s var(--ease);
+}
+
+.file-preview::after {
+  content: '✓ Тандалды';
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: #dbeafe;
+  border-radius: 999px;
+}
+
+.file-preview__img {
+  display: block;
+  max-width: 100%;
+  max-height: 260px;
+  margin: 0 auto 10px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--radius-sm);
+}
+
+.file-preview__name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.file-preview__size {
+  margin-top: 2px;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.file-hint {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+/* ===== Прогресс ===== */
+.progress {
+  height: 8px;
+  margin-top: 14px;
+  overflow: hidden;
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+.progress__bar {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #6366f1);
+  border-radius: 999px;
+  transition: width 0.15s linear;
+}
+
+.progress__label {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+}
+
+/* Алынып жаткан файл (прогресс менен) */
+.receive-progress {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-line);
+  border-radius: var(--radius);
+}
+
+.receive-progress__name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* ===== Билдирүүлөр ===== */
+.message {
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: left;
+  color: var(--color-warning-text);
+  background: var(--color-warning-soft);
+  border: 1px solid var(--color-warning-line);
+  border-radius: var(--radius-sm);
+  animation: rise 0.25s var(--ease);
+}
+
+.message--success {
+  color: var(--color-success-text);
+  background: var(--color-success-soft);
+  border-color: var(--color-success-line);
+}
+
+/* ===== Багыт карталары: 📱 → 💻 жана 💻 → 📱 ===== */
+.send-panel,
+.received {
+  padding: 20px;
+  text-align: left;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-head__route {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  min-width: 68px;
+  height: 44px;
+  padding: 0 10px;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-line);
+  border-radius: 999px;
+}
+
+.card-head__title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.card-head__subtitle {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.send-panel .tiles {
+  margin-top: 16px;
+}
+
+/* Алынган маалымат тизмеси */
+.received__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  list-style: none;
+}
+
+/* Тизме бош болгондо жардамчы жазуу */
+.received__list:empty::before {
+  content: attr(data-empty);
+  display: block;
+  padding: 28px 16px;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--color-muted);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+}
+
+.received__item {
+  padding: 14px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  animation: rise 0.25s var(--ease);
+}
+
+.received__text {
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.received__image {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  margin-bottom: 10px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--radius-sm);
+}
+
+.received__meta {
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  word-break: break-all;
+}
+
+.received__file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.received__file-icon {
+  flex-shrink: 0;
+  font-size: 2rem;
+}
+
+.received__file-name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.received__file .received__meta {
+  margin: 2px 0 0;
+}
+
+/* "Көчүрүү" жана "Сактоо" */
+.received__copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #fff;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s,
+    transform 0.1s;
+}
+
+.received__copy:hover {
+  background: var(--color-primary-dark);
+}
+
+.received__copy:active {
+  transform: scale(0.97);
+}
+
+/* ===== Төмөнкү артыкчылыктар ===== */
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  margin-top: 24px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+/* ===== Анимациялар (кыска жана жумшак) ===== */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 16px rgba(37, 99, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
+/* Анимацияны каалабаган колдонуучулар үчүн */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Кичинекей экрандар ===== */
+@media (max-width: 380px) {
+  .connect {
+    padding: 24px 16px;
+  }
+
+  .tile {
+    min-height: 80px;
+    font-size: 0.85rem;
+  }
+
+  .card-head__route {
+    min-width: 66px;
+  }
+}
+
+/* ===== Чоң экрандар (компьютер) ===== */
+@media (min-width: 880px) {
+  .app--wide {
+    max-width: 940px;
+  }
+
+  /* QR картасы ортодо бойдон калат */
+  .app--wide .connect {
+    max-width: 440px;
+    margin-inline: auto;
+  }
+
+  .transfer-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: 20px;
+  }
+}

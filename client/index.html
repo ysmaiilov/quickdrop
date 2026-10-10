@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f6fb">
+  <title>QuickDrop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="app app--wide">
+
+    <!-- Логотип жана аталыш -->
+    <header class="brand">
+      <div class="brand__logo" aria-hidden="true">⇄</div>
+      <h1 class="brand__name">QuickDrop</h1>
+    </header>
+
+    <!-- Байланыштын абалы -->
+    <div class="status-badge" id="statusBadge" data-tone="neutral" role="status" aria-live="polite">
+      <span class="status-badge__icon" id="statusBadgeIcon" aria-hidden="true">⏳</span>
+      <span class="status-badge__text" id="statusBadgeText">Күтүүдө</span>
+      <span class="status-badge__spinner" id="statusBadgeSpinner" aria-hidden="true" hidden></span>
+    </div>
+
+    <!-- Туташтыруу картасы: QR-код негизги элемент -->
+    <section class="connect">
+      <p class="connect__title" id="title">📱 Телефонду туташтырыңыз</p>
+
+      <!-- QR-код ушул жерге чийилет -->
+      <div class="qr" id="qr" role="img" aria-label="QR-код">
+        <span class="qr__label">QR</span>
+      </div>
+
+      <p class="connect__info" id="info">QR-код 2 мүнөт жарактуу</p>
+      <p class="connect__timer" id="timer"></p>
+
+      <!-- Туташтыруунун кадамдары (QR күтүп турганда гана көрүнөт) -->
+      <ol class="steps">
+        <li><span>Телефондун камерасын ачыңыз</span></li>
+        <li><span>Камераны QR-кодго багыттаңыз</span></li>
+        <li><span>Компьютерде <strong>Уруксат берүү</strong> басыңыз</span></li>
+      </ol>
+
+      <!-- Мөөнөт бүткөндө же ката болгондо билдирүү -->
+      <p class="message" id="message" role="alert" hidden></p>
+
+      <button class="btn" id="newQrBtn" type="button">Жаңы QR-код</button>
+      <button class="btn btn--danger" id="disconnectBtn" type="button" hidden>Байланышты үзүү</button>
+
+      <!-- Телефон туташууну сураганда гана көрүнөт -->
+      <div class="actions" id="approvalActions" hidden>
+        <button class="btn" id="approveBtn" type="button">Уруксат берүү</button>
+        <button class="btn btn--danger" id="rejectBtn" type="button">Баш тартуу</button>
+      </div>
+    </section>
+
+    <!-- Туташкандан кийин эки багыт -->
+    <div class="transfer-grid">
+
+      <!-- 📱 Телефон → 💻 Компьютер: телефондон келген маалымат -->
+      <section class="received" id="received" hidden>
+        <header class="card-head">
+          <p class="card-head__route" aria-hidden="true">📱 → 💻</p>
+          <div>
+            <h2 class="card-head__title">Телефон → Компьютер</h2>
+            <p class="card-head__subtitle">Телефондон келген маалымат</p>
+          </div>
+        </header>
+
+        <p class="message message--success" id="receivedStatus" role="status" hidden></p>
+
+        <!-- Файл келип жатканда прогресс -->
+        <div class="receive-progress" id="receiveProgress" hidden>
+          <p class="receive-progress__name" id="receiveProgressName"></p>
+          <div class="progress">
+            <div class="progress__bar" id="receiveProgressBar"></div>
+          </div>
+          <p class="progress__label" id="receiveProgressLabel"></p>
+        </div>
+
+        <ul class="received__list" id="receivedList"
+            data-empty="Телефондон жөнөтүлгөн текст, сүрөт жана файлдар ушул жерде көрүнөт"></ul>
+      </section>
+
+      <!-- 💻 Компьютер → 📱 Телефон: телефонго жөнөтүү -->
+      <section class="send-panel" id="sendPanel" hidden>
+        <header class="card-head">
+          <p class="card-head__route" aria-hidden="true">💻 → 📱</p>
+          <div>
+            <h2 class="card-head__title">Компьютер → Телефон</h2>
+            <p class="card-head__subtitle">Телефонго жөнөтүү</p>
+          </div>
+        </header>
+
+        <!-- Эмнени жөнөтөсүз? -->
+        <div class="tiles" role="group" aria-label="Жөнөтүү түрү">
+          <button class="tile" id="pcTileText" type="button" aria-pressed="true">
+            <span class="tile__icon" aria-hidden="true">📝</span>
+            <span>Текст</span>
+          </button>
+          <button class="tile" id="pcTileImage" type="button" aria-pressed="false">
+            <span class="tile__icon" aria-hidden="true">🖼️</span>
+            <span>Сүрөт</span>
+          </button>
+          <button class="tile" id="pcTileFile" type="button" aria-pressed="false">
+            <span class="tile__icon" aria-hidden="true">📄</span>
+            <span>Файл</span>
+          </button>
+        </div>
+
+        <!-- Текст -->
+        <div class="send-block" id="pcTextBlock">
+          <textarea class="text-input" id="pcTextInput" maxlength="5000"
+                    aria-label="Телефонго жөнөтүлө турган текст"
+                    placeholder="Телефонго жөнөтө турган текстти жазыңыз..."></textarea>
+          <p class="message" id="pcTextMessage" role="alert" hidden></p>
+          <button class="btn" id="pcSendTextBtn" type="button">Текст жөнөтүү</button>
+        </div>
+
+        <!-- Сүрөт же файл -->
+        <div class="send-block" id="pcFileBlock" hidden>
+          <div class="dropzone" id="pcDropzone">
+            <p class="dropzone__text">Файлды ушул жерге сүйрөп таштаңыз</p>
+            <p class="dropzone__or">же</p>
+            <button class="btn btn--ghost" id="pcPickBtn" type="button">Файл тандоо</button>
+          </div>
+          <input type="file" id="pcFileInput" hidden>
+
+          <!-- Тандалган файлдын аты жана көлөмү -->
+          <div class="file-info" id="pcFileInfo" hidden>
+            <img class="file-info__thumb" id="pcFileThumb" alt="" hidden>
+            <span class="file-info__icon" id="pcFileIcon" aria-hidden="true">📄</span>
+            <div>
+              <p class="file-info__name" id="pcFileName"></p>
+              <p class="file-info__size" id="pcFileSize"></p>
+            </div>
+          </div>
+
+          <!-- Жөнөтүү прогресси -->
+          <div class="progress" id="pcFileProgress" hidden>
+            <div class="progress__bar" id="pcFileProgressBar"></div>
+          </div>
+          <p class="progress__label" id="pcFileProgressLabel" hidden></p>
+
+          <p class="message" id="pcFileMessage" role="alert" hidden></p>
+          <button class="btn" id="pcSendFileBtn" type="button" disabled>Жөнөтүү</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Төмөнкү артыкчылыктар -->
+    <footer class="features">
+      <span class="features__item">🔒 Коопсуз байланыш</span>
+      <span class="features__item">⚡ Катталуу талап кылынбайт</span>
+    </footer>
+
+  </main>
+
+  <script src="/vendor/qrcode.min.js"></script>
+  <script src="/config.js"></script>
+  <script src="/api.js"></script>
+  <script src="/peer.js"></script>
+  <script src="/security.js"></script>
+  <script src="/transfer.js"></script>
+  <script src="/status.js"></script>
+  <script src="/received.js"></script>
+  <script src="/send-panel.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

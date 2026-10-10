@@ -1,0 +1,15 @@
+{
+  "name": "quickdrop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "QuickDrop: телефон менен компьютердин ортосунда WebRTC аркылуу түз өткөрүү",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/server.js",
+    "build": "node scripts/build.js",
+    "preview": "node scripts/preview.js"
+  }
+}

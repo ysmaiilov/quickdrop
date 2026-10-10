@@ -1,0 +1,14 @@
+{
+  "name": "quickdrop-server",
+  "version": "0.1.0",
+  "description": "QuickDrop серверинин биринчи этабы",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "qrcodejs": "^1.0.0",
+    "ws": "^8.18.0"
+  }
+}
