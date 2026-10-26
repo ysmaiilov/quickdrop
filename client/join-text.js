@@ -127,8 +127,8 @@ function createTextSender({ getPeer }) {
       canRetry = false;
       setSending(false);
       textInput.value = '';
-            showMessage('✓ Ийгиликтүү жөнөтүлдү', 'success');
       reportTransferStatus('completed', { name: TRANSFER_NAME });
+      back(); // башкы экранга кайтабыз
     }
   }
 

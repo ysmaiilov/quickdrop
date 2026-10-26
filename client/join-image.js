@@ -153,8 +153,8 @@ function createImageSender({ getPeer }) {
         onProgress: showProgress,
         signal: currentController.signal,
       });
-      showMessage('✓ Ийгиликтүү жөнөтүлдү', 'success');
-      clearSelection();
+      // Ийгиликтүү болсо, түз башкы экранга кайтабыз (абал көрсөткүчү "Аяктады" дейт)
+      back();
     } catch (error) {
       // Экран жабылып же байланыш үзүлүп, өзүбүз токтоткон болсо, эч нерсе көрсөтпөйбүз
       if (currentController.signal.aborted) return;
