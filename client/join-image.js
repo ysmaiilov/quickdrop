@@ -1,17 +1,15 @@
 // QuickDrop: телефондон сүрөт жөнөтүү (6-этап).
 // Сүрөт сервер аркылуу эмес, WebRTC DataChannel аркылуу түз компьютерге өтөт.
+// Бир нече сүрөттү тандаса болот: жөнөтүүдөн мурун ар бирин "✕" менен алып салса болот.
 
 // getPeer: учурдагы WebRTC байланышын кайтарган функция
-function createImageSender({ getPeer, onSent }) {
+function createImageSender({ getPeer, onSent, onOpen, onClose }) {
   const statusCard = document.getElementById('statusCard');
   const imageButton = document.getElementById('imageBtn');
   const imageCard = document.getElementById('imageCard');
   const fileInput = document.getElementById('imageInput');
   const pickButton = document.getElementById('pickImageBtn');
-  const previewBox = document.getElementById('imagePreview');
-  const previewImage = document.getElementById('imagePreviewImg');
-  const nameElement = document.getElementById('imageName');
-  const sizeElement = document.getElementById('imageSize');
+  const listElement = document.getElementById('imageList');
   const progressBox = document.getElementById('imageProgress');
   const progressBar = document.getElementById('imageProgressBar');
   const progressLabel = document.getElementById('imageProgressLabel');
@@ -22,10 +20,11 @@ function createImageSender({ getPeer, onSent }) {
   // Файл жөнөтүү модулу (transfer.js)
   const fileSender = createFileSender({ getPeer });
 
-  let selectedFile = null;
-  let previewUrl = null;
+  // Тандалган сүрөттөр (selection-list.js)
+  const selection = createSelectionList({ list: listElement, onChange: () => updateControls() });
+
   let controller = null; // жөнөтүүнү токтотуу үчүн (AbortController)
-    let canRetry = false; // жөнөтүү ийгиликсиз болду: "Кайра аракет кылуу" көрсөтөбүз
+  let canRetry = false; // жөнөтүү ийгиликсиз болду: "Кайра аракет кылуу" көрсөтөбүз
 
   // Ката түрлөрү жана алардын тексттери
   const ERROR_TEXTS = {
@@ -37,7 +36,7 @@ function createImageSender({ getPeer, onSent }) {
     too_large: 'Сүрөт өтө чоң.',
     unsupported: 'Компьютер бул форматты кабыл албайт.',
     size_mismatch: 'Сүрөт толук жетпеди. Кайра аракет кылыңыз.',
-        quota_exceeded: 'Компьютер бул байланыш үчүн көбүрөөк маалымат кабыл албайт. Жаңы байланыш түзүңүз.',
+    quota_exceeded: 'Компьютер бул байланыш үчүн көбүрөөк маалымат кабыл албайт. Жаңы байланыш түзүңүз.',
     timeout: 'Компьютер сүрөттү күтүп туруп токтотуп койду. Кайра аракет кылыңыз.',
     protocol_error: 'Сүрөт өткөрүүдө ката кетти. Кайра аракет кылыңыз.',
   };
@@ -58,17 +57,22 @@ function createImageSender({ getPeer, onSent }) {
   // Кнопкалардын абалын жаңыртат
   function updateControls() {
     const busy = controller !== null;
+    const count = selection.count();
     pickButton.disabled = busy;
     backButton.disabled = busy;
-    sendButton.disabled = busy || !selectedFile;
-    sendButton.textContent = busy ? 'Жөнөтүлүүдө...' : 'Жөнөтүү';
-        sendButton.textContent = busy ? 'Жөнөтүлүүдө...' : canRetry ? 'Кайра аракет кылуу' : 'Жөнөтүү';
+    sendButton.disabled = busy || count === 0;
+    if (busy) sendButton.textContent = 'Жөнөтүлүүдө...';
+    else if (canRetry) sendButton.textContent = 'Кайра аракет кылуу';
+    else sendButton.textContent = count > 1 ? `Жөнөтүү (${count})` : 'Жөнөтүү';
+    selection.setLocked(busy);
   }
 
-  function showProgress(sent, total) {
+  // index/total: бир нече сүрөт болсо, "2/5" көрсөтөбүз
+  function showProgress(sent, total, index = 1, count = 1) {
     const percent = Math.floor((sent / total) * 100);
+    const prefix = count > 1 ? `${index}/${count} · ` : '';
     progressBar.style.width = `${percent}%`;
-    progressLabel.textContent = `${percent}% · ${formatFileSize(sent)} / ${formatFileSize(total)}`;
+    progressLabel.textContent = `${prefix}${percent}% · ${formatFileSize(sent)} / ${formatFileSize(total)}`;
     progressBox.hidden = false;
     progressLabel.hidden = false;
   }
@@ -81,81 +85,78 @@ function createImageSender({ getPeer, onSent }) {
 
   /* ----- Сүрөт тандоо ----- */
 
-  // Тандалган сүрөттү жана preview'ду тазалайт
+  // Тандалган сүрөттөрдү тазалайт
   function clearSelection() {
-    selectedFile = null;
-        canRetry = false;
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      previewUrl = null;
-    }
-    previewImage.removeAttribute('src');
-    previewBox.hidden = true;
+    canRetry = false;
     fileInput.value = ''; // ошол эле сүрөттү кайра тандаганга мүмкүндүк берет
-    updateControls();
+    selection.clear();
   }
 
-  // Колдонуучу сүрөт тандаганда
+  // Каталуу сүрөттү текшерет: ката тексти же null
+  function validate(file) {
+    if (!IMAGE_MIME_PATTERN.test(file.type)) return 'Бул формат колдоого алынбайт. JPG, PNG, WEBP же GIF тандаңыз.';
+    if (file.size === 0) return 'Файл бош экен. Башка сүрөт тандаңыз.';
+    if (file.size > MAX_IMAGE_BYTES) return `Сүрөт өтө чоң. Максимум: ${formatFileSize(MAX_IMAGE_BYTES)}.`;
+    return null;
+  }
+
+  // Колдонуучу сүрөт(төр) тандаганда: туура келгендери тизмеге кошулат
   function handleFileChosen() {
-    const file = fileInput.files[0];
-    if (!file) return;
+    const files = Array.from(fileInput.files);
+    fileInput.value = '';
+    if (files.length === 0) return;
 
     clearMessage();
     hideProgress();
+    canRetry = false;
 
-    if (!IMAGE_MIME_PATTERN.test(file.type)) {
-      clearSelection();
-      showMessage('Бул формат колдоого алынбайт. JPG, PNG, WEBP же GIF тандаңыз.', 'error');
-      return;
-    }
-    if (file.size === 0) {
-      clearSelection();
-      showMessage('Файл бош экен. Башка сүрөт тандаңыз.', 'error');
-      return;
-    }
-        if (file.size > MAX_IMAGE_BYTES) {
-      clearSelection();
-      showMessage(`Сүрөт өтө чоң. Максимум: ${formatFileSize(MAX_IMAGE_BYTES)}.`, 'error');
-      return;
+    let firstError = null;
+    let overflow = false;
+    for (const file of files) {
+      const error = validate(file);
+      if (error) {
+        firstError = firstError || error;
+        continue;
+      }
+      if (!selection.add(file, 'image')) overflow = true;
     }
 
-    // Preview, аты жана өлчөмү
-    clearSelection();
-    selectedFile = file;
-    previewUrl = URL.createObjectURL(file);
-    previewImage.hidden = false;
-    previewImage.onerror = () => {
-      previewImage.hidden = true; // браузер форматты көрсөтө албаса
-    };
-    previewImage.src = previewUrl;
-    nameElement.textContent = file.name;
-    sizeElement.textContent = formatFileSize(file.size);
-    previewBox.hidden = false;
+    if (overflow) showMessage(`Эң көп ${MAX_SELECTED_FILES} сүрөт тандаса болот.`, 'error');
+    else if (firstError) showMessage(firstError, 'error');
     updateControls();
   }
 
   /* ----- Жөнөтүү ----- */
 
+  // Тизмедеги сүрөттөрдү бирден-бирден жөнөтөт. Жөнөтүлгөнү тизмеден түшөт,
+  // ката болсо токтойт жана калгандары "Кайра аракет кылуу" менен жөнөтүлөт.
   async function send() {
-    if (!selectedFile || controller) return;
+    if (selection.count() === 0 || controller) return;
 
-    const file = selectedFile;
     const currentController = new AbortController();
     controller = currentController;
+    const queue = selection.items();
+    const total = queue.length;
 
     clearMessage();
-    showProgress(0, file.size);
+    canRetry = false;
     updateControls();
 
     try {
-        await fileSender.sendFile(file, {
-        kind: 'image',
-        onProgress: showProgress,
-        signal: currentController.signal,
-      });
+      for (let index = 0; index < total; index += 1) {
+        const item = queue[index];
+        showProgress(0, item.file.size, index + 1, total);
+        await fileSender.sendFile(item.file, {
+          kind: 'image',
+          onProgress: (sent, size) => showProgress(sent, size, index + 1, total),
+          signal: currentController.signal,
+        });
+        selection.drop(item);
+        if (window.logSent) logSent('image');
+      }
       // Ийгиликтүү болсо, түз башкы экранга кайтабыз (абал көрсөткүчү "Аяктады" дейт)
       back();
-      if (onSent) onSent('✓ Сүрөт жөнөтүлдү');
+      if (onSent) onSent(total > 1 ? `✓ Сүрөттөр жөнөтүлдү: ${total}` : '✓ Сүрөт жөнөтүлдү');
     } catch (error) {
       // Экран жабылып же байланыш үзүлүп, өзүбүз токтоткон болсо, эч нерсе көрсөтпөйбүз
       if (currentController.signal.aborted) return;
@@ -165,7 +166,7 @@ function createImageSender({ getPeer, onSent }) {
         ERROR_TEXTS[error.code] ||
         'Сүрөт жөнөтүлгөн жок. Кайра аракет кылыңыз.';
       showMessage(text, 'error');
-            canRetry = true;
+      canRetry = true;
     } finally {
       controller = null;
       hideProgress();
@@ -195,6 +196,7 @@ function createImageSender({ getPeer, onSent }) {
     clearMessage();
     statusCard.hidden = true;
     imageCard.hidden = false;
+    if (onOpen) onOpen();
   }
 
   function back() {
@@ -202,6 +204,7 @@ function createImageSender({ getPeer, onSent }) {
     clearMessage();
     imageCard.hidden = true;
     statusCard.hidden = false;
+    if (onClose) onClose();
   }
 
   // Компьютерден келген билдирүү (мисалы "алдым" жообу)
@@ -215,5 +218,5 @@ function createImageSender({ getPeer, onSent }) {
   sendButton.addEventListener('click', send);
   backButton.addEventListener('click', back);
 
-  return { show, hide, handleMessage };
+  return { show, hide, handleMessage, back, isBusy: () => controller !== null };
 }

@@ -6,13 +6,26 @@
   <meta name="theme-color" content="#f4f6fb">
   <title>QuickDrop - Туташуу</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/theme.js"></script>
 </head>
 <body>
   <main class="app">
-    <header class="brand">
-      <div class="brand__logo" aria-hidden="true">⇄</div>
-      <h1 class="brand__name">QuickDrop</h1>
-    </header>
+    <!-- Жогорку сап: сол жакта логотип, оң жакта тил жана тема -->
+    <div class="topbar">
+      <header class="brand">
+        <div class="brand__logo" aria-hidden="true">⇄</div>
+        <h1 class="brand__name">QuickDrop</h1>
+      </header>
+
+      <div class="toolbar">
+        <select class="toolbar__lang" id="langSelect" aria-label="Тил">
+          <option value="ky">Кыргызча</option>
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+        </select>
+        <button class="toolbar__btn" id="themeBtn" type="button" title="Тема: караңгы" aria-label="Тема: караңгы">🌙</button>
+      </div>
+    </div>
 
     <!-- Туташкандан кийинки кичине статус сызыгы: "Байланышты үзүү" ушунда -->
     <div class="conn-bar" id="connBar" data-phase="connected" hidden>
@@ -77,15 +90,11 @@
       <p class="sheet-route">📱 Телефон → 💻 Компьютер</p>
 
       <!-- Файл тандоо талаасы жашыруун, кнопка аркылуу ачылат -->
-      <input type="file" id="imageInput" accept="image/*" hidden>
+      <input type="file" id="imageInput" accept="image/*" multiple hidden>
       <button class="btn btn--ghost" id="pickImageBtn" type="button">Сүрөт тандоо</button>
 
-      <!-- Тандалган сүрөттүн preview'су, аты жана өлчөмү -->
-      <div class="file-preview" id="imagePreview" hidden>
-        <img class="file-preview__img" id="imagePreviewImg" alt="Тандалган сүрөт">
-        <p class="file-preview__name" id="imageName"></p>
-        <p class="file-preview__size" id="imageSize"></p>
-      </div>
+      <!-- Тандалган сүрөттөр (ар бири "✕" менен өчүрүлөт) -->
+      <ul class="sel-list" id="imageList" hidden></ul>
 
       <!-- Жөнөтүү прогресси -->
       <div class="progress" id="imageProgress" hidden>
@@ -112,7 +121,7 @@
       <div class="file-info" id="fileInfo" hidden>
         <span class="file-info__icon" id="fileIcon" aria-hidden="true">📄</span>
         <div>
-          <p class="file-info__name" id="fileName"></p>
+          <p class="file-info__name" id="fileName" data-no-i18n></p>
           <p class="file-info__size" id="fileSize"></p>
         </div>
       </div>
@@ -141,7 +150,7 @@
 
       <!-- Файл келип жатканда прогресс -->
       <div class="receive-progress" id="inboxProgress" hidden>
-        <p class="receive-progress__name" id="inboxProgressName"></p>
+        <p class="receive-progress__name" id="inboxProgressName" data-no-i18n></p>
         <div class="progress">
           <div class="progress__bar" id="inboxProgressBar"></div>
         </div>
@@ -151,8 +160,19 @@
       <ul class="received__list" id="inboxList"
           data-empty="Компьютерден жөнөтүлгөн текст, сүрөт жана файлдар ушул жерде көрүнөт"></ul>
     </section>
+
+    <!-- Жөнөтүү тарыхы: түрү жана убактысы гана (мазмуну сакталбайт) -->
+    <details class="history">
+      <summary class="history__summary">
+        <span>Жөнөтүү тарыхы</span>
+        <span class="history__count" id="historyCount" data-no-i18n></span>
+      </summary>
+      <p class="history__empty" id="historyEmpty">Азырынча эч нерсе жөнөтүлгөн жок</p>
+      <ul class="history__list" id="historyList"></ul>
+    </details>
   </main>
 
+  <script src="/i18n.js"></script>
   <script src="/config.js"></script>
   <script src="/api.js"></script>
   <script src="/peer.js"></script>
@@ -161,6 +181,8 @@
   <script src="/received.js"></script>
   <script src="/status.js"></script>
   <script src="/join-text.js"></script>
+  <script src="/send-history.js"></script>
+  <script src="/selection-list.js"></script>
   <script src="/join-image.js"></script>
   <script src="/join-file.js"></script>
   <script src="/join.js"></script>

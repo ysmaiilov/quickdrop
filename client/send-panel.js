@@ -16,13 +16,10 @@ function createSendPanel({ getPeer }) {
 
   // Файл жана сүрөт
   const dropzone = document.getElementById('pcDropzone');
+  const dropText = document.getElementById('pcDropText');
   const pickButton = document.getElementById('pcPickBtn');
   const fileInput = document.getElementById('pcFileInput');
-  const fileInfo = document.getElementById('pcFileInfo');
-  const thumbElement = document.getElementById('pcFileThumb');
-  const iconElement = document.getElementById('pcFileIcon');
-  const nameElement = document.getElementById('pcFileName');
-  const sizeElement = document.getElementById('pcFileSize');
+  const listElement = document.getElementById('pcFileList');
   const progressBox = document.getElementById('pcFileProgress');
   const progressBar = document.getElementById('pcFileProgressBar');
   const progressLabel = document.getElementById('pcFileProgressLabel');
@@ -32,15 +29,16 @@ function createSendPanel({ getPeer }) {
   // Файл жөнөтүү модулу (transfer.js)
   const fileSender = createFileSender({ getPeer });
 
+  // Тандалган файлдар (selection-list.js): ар бирин "✕" менен алып салса болот
+  const selection = createSelectionList({ list: listElement, onChange: () => updateFileControls() });
+
   // Текст абалы
   let textSending = false;
   let canRetryText = false;
   let textTimer = null;
 
   // Файл абалы
-  let selectedFile = null;
-  let selectedKind = 'file';
-  let previewUrl = null;
+  let tileKind = 'text'; // тандалган плитка: 'text', 'image' же 'file'
   let controller = null; // жөнөтүүнү токтотуу үчүн (AbortController)
   let canRetryFile = false;
 
@@ -132,20 +130,22 @@ function createSendPanel({ getPeer }) {
 
   function updateFileControls() {
     const busy = controller !== null;
+    const count = selection.count();
     pickButton.disabled = busy;
-    sendFileButton.disabled = busy || !selectedFile;
-    sendFileButton.textContent = busy
-      ? 'Жөнөтүлүүдө...'
-      : canRetryFile
-        ? 'Кайра аракет кылуу'
-        : 'Жөнөтүү';
+    sendFileButton.disabled = busy || count === 0;
+    if (busy) sendFileButton.textContent = 'Жөнөтүлүүдө...';
+    else if (canRetryFile) sendFileButton.textContent = 'Кайра аракет кылуу';
+    else sendFileButton.textContent = count > 1 ? `Жөнөтүү (${count})` : 'Жөнөтүү';
+    selection.setLocked(busy);
     dropzone.classList.toggle('dropzone--disabled', busy);
   }
 
-  function showProgress(sent, total) {
+  // index/count: бир нече файл болсо, "2/5" көрсөтөбүз
+  function showProgress(sent, total, index = 1, count = 1) {
     const percent = Math.floor((sent / total) * 100);
+    const prefix = count > 1 ? `${index}/${count} · ` : '';
     progressBar.style.width = `${percent}%`;
-    progressLabel.textContent = `${percent}% · ${formatFileSize(sent)} / ${formatFileSize(total)}`;
+    progressLabel.textContent = `${prefix}${percent}% · ${formatFileSize(sent)} / ${formatFileSize(total)}`;
     progressBox.hidden = false;
     progressLabel.hidden = false;
   }
@@ -156,24 +156,30 @@ function createSendPanel({ getPeer }) {
     progressBar.style.width = '0%';
   }
 
-  // Тандалган файлды жана preview'ну тазалайт
+  // Тандалган файлдарды тазалайт
   function clearSelection() {
-    selectedFile = null;
-    selectedKind = 'file';
     canRetryFile = false;
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      previewUrl = null;
-    }
-    thumbElement.removeAttribute('src');
-    thumbElement.hidden = true;
-    fileInfo.hidden = true;
     fileInput.value = ''; // ошол эле файлды кайра тандаганга мүмкүндүк берет
-    updateFileControls();
+    selection.clear();
   }
 
-  // Файл тандалды (file picker же Drag & Drop аркылуу)
-  function selectFile(file) {
+  // Бир файлды текшерет: ката тексти же null. Файл тизмеге кошулат (сүрөт болсо preview менен).
+  function validateFile(file) {
+    if (file.size === 0) return 'Файл бош экен. Башка файл тандаңыз.';
+    if (file.size > MAX_MOBILE_FILE_BYTES) {
+      return `Файл өтө чоң. Телефон ${formatFileSize(MAX_MOBILE_FILE_BYTES)} чейин кабыл алат.`;
+    }
+    if (isBlockedFileName(file.name)) return ERROR_TEXTS.blocked_type;
+
+    const isImage = IMAGE_MIME_PATTERN.test(file.type) && file.size <= MAX_IMAGE_BYTES;
+    if (tileKind === 'image' && !isImage) {
+      return 'Бул сүрөт эмес (же өтө чоң). JPG, PNG, WEBP же GIF тандаңыз, же "Файл" плиткасын колдонуңуз.';
+    }
+    return null;
+  }
+
+  // Файлдар тандалды (file picker, Drag & Drop же Ctrl+V аркылуу): туура келгендери тизмеге кошулат
+  function selectFiles(files) {
     if (controller) {
       showMessage(fileMessage, ERROR_TEXTS.busy, 'error');
       return;
@@ -181,68 +187,62 @@ function createSendPanel({ getPeer }) {
 
     clearMessage(fileMessage);
     hideProgress();
-    clearSelection();
+    canRetryFile = false;
 
-    if (file.size === 0) {
-      showMessage(fileMessage, 'Файл бош экен. Башка файл тандаңыз.', 'error');
-      return;
-    }
-    if (file.size > MAX_MOBILE_FILE_BYTES) {
-      showMessage(fileMessage, `Файл өтө чоң. Телефон ${formatFileSize(MAX_MOBILE_FILE_BYTES)} чейин кабыл алат.`, 'error');
-      return;
-    }
-    if (isBlockedFileName(file.name)) {
-      showMessage(fileMessage, ERROR_TEXTS.blocked_type, 'error');
-      return;
-    }
-
-    // Сүрөт болсо, телефондо preview менен көрсөтүлөт; башкасы файл катары өтөт
-    const isImage = IMAGE_MIME_PATTERN.test(file.type) && file.size <= MAX_IMAGE_BYTES;
-    selectedFile = file;
-    selectedKind = isImage ? 'image' : 'file';
-
-    iconElement.textContent = isImage ? '🖼️' : getFileIcon(file.name);
-    nameElement.textContent = file.name;
-    sizeElement.textContent = formatFileSize(file.size);
-
-    if (isImage) {
-      previewUrl = URL.createObjectURL(file);
-      thumbElement.onerror = () => {
-        thumbElement.hidden = true; // браузер форматты көрсөтө албаса
-      };
-      thumbElement.src = previewUrl;
-      thumbElement.hidden = false;
+    let firstError = null;
+    let overflow = false;
+    for (const file of files) {
+      const error = validateFile(file);
+      if (error) {
+        firstError = firstError || error;
+        continue;
+      }
+      // Сүрөт болсо, телефондо preview менен көрсөтүлөт; башкасы файл катары өтөт
+      const isImage = IMAGE_MIME_PATTERN.test(file.type) && file.size <= MAX_IMAGE_BYTES;
+      if (!selection.add(file, isImage ? 'image' : 'file')) overflow = true;
     }
 
-    fileInfo.hidden = false;
+    if (overflow) showMessage(fileMessage, `Эң көп ${MAX_SELECTED_FILES} файл тандаса болот.`, 'error');
+    else if (firstError) showMessage(fileMessage, firstError, 'error');
     updateFileControls();
   }
 
-  async function sendSelectedFile() {
-    if (!selectedFile || controller) return;
+  // Тизмедеги файлдарды бирден-бирден жөнөтөт. Жөнөтүлгөнү тизмеден түшөт,
+  // ката болсо токтойт жана калгандары "Кайра аракет кылуу" менен жөнөтүлөт.
+  async function sendSelectedFiles() {
+    if (selection.count() === 0 || controller) return;
 
     if (isFileTransferActive()) {
       showMessage(fileMessage, ERROR_TEXTS.busy, 'error');
       return;
     }
 
-    const file = selectedFile;
-    const kind = selectedKind;
     const currentController = new AbortController();
     controller = currentController;
+    const queue = selection.items();
+    const total = queue.length;
 
     clearMessage(fileMessage);
-    showProgress(0, file.size);
+    canRetryFile = false;
     updateFileControls();
 
     try {
-      await fileSender.sendFile(file, {
-        kind,
-        onProgress: showProgress,
-        signal: currentController.signal,
-      });
-      showMessage(fileMessage, '✓ Ийгиликтүү жөнөтүлдү', 'success');
-      clearSelection();
+      for (let index = 0; index < total; index += 1) {
+        const item = queue[index];
+        showProgress(0, item.file.size, index + 1, total);
+        await fileSender.sendFile(item.file, {
+          kind: item.kind,
+          onProgress: (sent, size) => showProgress(sent, size, index + 1, total),
+          signal: currentController.signal,
+        });
+        selection.drop(item);
+        if (window.logSent) logSent(item.kind);
+      }
+      showMessage(
+        fileMessage,
+        total > 1 ? `✓ Жөнөтүлдү: ${total}` : '✓ Ийгиликтүү жөнөтүлдү',
+        'success'
+      );
     } catch (error) {
       // Байланыш үзүлүп же панель жабылып, өзүбүз токтоткон болсо, эч нерсе көрсөтпөйбүз
       if (currentController.signal.aborted) return;
@@ -301,10 +301,7 @@ function createSendPanel({ getPeer }) {
     const files = event.dataTransfer.files;
     if (!files || files.length === 0) return;
 
-    selectFile(files[0]);
-    if (files.length > 1 && selectedFile) {
-      showMessage(fileMessage, 'Бир убакта бир гана файл жөнөтүлөт: биринчи файл тандалды.', 'error');
-    }
+    selectFiles(Array.from(files));
   });
 
   // Файл бетке туура эмес жерге ташталса, браузер аны ачып, байланышты үзүп койбосун
@@ -336,7 +333,7 @@ function createSendPanel({ getPeer }) {
     }
 
     selectTile('image');
-    selectFile(file);
+    selectFiles([file]);
   });
 
   /* ----- Панелди көрсөтүү / жашыруу ----- */
@@ -373,6 +370,7 @@ function createSendPanel({ getPeer }) {
       updateTextControls();
       showMessage(textMessage, '✓ Ийгиликтүү жөнөтүлдү', 'success');
       reportTransferStatus('completed', { name: 'Текст' });
+      if (window.logSent) logSent('text');
       return;
     }
     fileSender.handleMessage(message);
@@ -397,7 +395,20 @@ function createSendPanel({ getPeer }) {
     }
     textBlock.hidden = kind !== 'text';
     fileBlock.hidden = kind === 'text';
+    tileKind = kind;
     fileInput.accept = kind === 'image' ? 'image/*' : ''; // сүрөт плиткасы сүрөттөрдү гана сунуштайт
+    if (kind === 'image') {
+      dropText.textContent = 'Сүрөттү ушул жерге сүйрөп таштаңыз же Ctrl+V менен коюңуз';
+      pickButton.textContent = 'Сүрөт тандоо';
+    } else {
+      dropText.textContent = 'Файлды ушул жерге сүйрөп таштаңыз';
+      pickButton.textContent = 'Файл тандоо';
+    }
+    // Башка түргө которулганда эски тандоо жана билдирүү калбасын
+    if (!controller && kind !== 'text') {
+      clearMessage(fileMessage);
+      clearSelection();
+    }
   }
 
   for (const [kind, tile] of Object.entries(tiles)) {
@@ -411,9 +422,11 @@ function createSendPanel({ getPeer }) {
   sendTextButton.addEventListener('click', sendText);
   pickButton.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) selectFile(fileInput.files[0]);
+    const files = Array.from(fileInput.files);
+    fileInput.value = '';
+    if (files.length > 0) selectFiles(files);
   });
-  sendFileButton.addEventListener('click', sendSelectedFile);
+  sendFileButton.addEventListener('click', sendSelectedFiles);
 
   return { show, hide, handleMessage };
 }

@@ -6,15 +6,28 @@
   <meta name="theme-color" content="#f4f6fb">
   <title>QuickDrop</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/theme.js"></script>
 </head>
 <body>
   <main class="app app--wide">
 
     <!-- Логотип жана аталыш -->
-    <header class="brand">
-      <div class="brand__logo" aria-hidden="true">⇄</div>
-      <h1 class="brand__name">QuickDrop</h1>
-    </header>
+    <!-- Жогорку сап: сол жакта логотип, оң жакта тил жана тема -->
+    <div class="topbar">
+      <header class="brand">
+        <div class="brand__logo" aria-hidden="true">⇄</div>
+        <h1 class="brand__name">QuickDrop</h1>
+      </header>
+
+      <div class="toolbar">
+        <select class="toolbar__lang" id="langSelect" aria-label="Тил">
+          <option value="ky">Кыргызча</option>
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+        </select>
+        <button class="toolbar__btn" id="themeBtn" type="button" title="Тема: караңгы" aria-label="Тема: караңгы">🌙</button>
+      </div>
+    </div>
 
     <!-- Туташуу учурундагы кичине статус сызыгы: абал жана "Байланышты үзүү" -->
     <div class="conn-bar" id="connBar" data-phase="connecting" hidden>
@@ -78,7 +91,7 @@
 
         <!-- Файл келип жатканда прогресс -->
         <div class="receive-progress" id="receiveProgress" hidden>
-          <p class="receive-progress__name" id="receiveProgressName"></p>
+          <p class="receive-progress__name" id="receiveProgressName" data-no-i18n></p>
           <div class="progress">
             <div class="progress__bar" id="receiveProgressBar"></div>
           </div>
@@ -127,21 +140,14 @@
         <!-- Сүрөт же файл -->
         <div class="send-block" id="pcFileBlock" hidden>
           <div class="dropzone" id="pcDropzone">
-            <p class="dropzone__text">Файлды ушул жерге сүйрөп таштаңыз же Ctrl+V менен сүрөттү коюңуз</p>
+            <p class="dropzone__text" id="pcDropText">Файлды ушул жерге сүйрөп таштаңыз</p>
             <p class="dropzone__or">же</p>
             <button class="btn btn--ghost" id="pcPickBtn" type="button">Файл тандоо</button>
           </div>
-          <input type="file" id="pcFileInput" hidden>
+          <input type="file" id="pcFileInput" multiple hidden>
 
-          <!-- Тандалган файлдын аты жана көлөмү -->
-          <div class="file-info" id="pcFileInfo" hidden>
-            <img class="file-info__thumb" id="pcFileThumb" alt="" hidden>
-            <span class="file-info__icon" id="pcFileIcon" aria-hidden="true">📄</span>
-            <div>
-              <p class="file-info__name" id="pcFileName"></p>
-              <p class="file-info__size" id="pcFileSize"></p>
-            </div>
-          </div>
+          <!-- Тандалган файлдар (ар бири "✕" менен өчүрүлөт) -->
+          <ul class="sel-list" id="pcFileList" hidden></ul>
 
           <!-- Жөнөтүү прогресси -->
           <div class="progress" id="pcFileProgress" hidden>
@@ -155,6 +161,16 @@
       </section>
     </div>
 
+    <!-- Жөнөтүү тарыхы: түрү жана убактысы гана (мазмуну сакталбайт) -->
+    <details class="history">
+      <summary class="history__summary">
+        <span>Жөнөтүү тарыхы</span>
+        <span class="history__count" id="historyCount" data-no-i18n></span>
+      </summary>
+      <p class="history__empty" id="historyEmpty">Азырынча эч нерсе жөнөтүлгөн жок</p>
+      <ul class="history__list" id="historyList"></ul>
+    </details>
+
     <!-- Төмөнкү артыкчылыктар -->
     <footer class="features">
       <span class="features__item">🔒 Коопсуз байланыш</span>
@@ -164,6 +180,7 @@
   </main>
 
   <script src="/vendor/qrcode.min.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/config.js"></script>
   <script src="/api.js"></script>
   <script src="/peer.js"></script>
@@ -171,6 +188,8 @@
   <script src="/transfer.js"></script>
   <script src="/status.js"></script>
   <script src="/received.js"></script>
+  <script src="/send-history.js"></script>
+  <script src="/selection-list.js"></script>
   <script src="/send-panel.js"></script>
   <script src="/app.js"></script>
 </body>

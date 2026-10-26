@@ -3,7 +3,7 @@
 // түз компьютерге өтөт.
 
 // getPeer: учурдагы WebRTC байланышын кайтарган функция
-function createFileScreen({ getPeer, onSent }) {
+function createFileScreen({ getPeer, onSent, onOpen, onClose }) {
   const statusCard = document.getElementById('statusCard');
   const fileButton = document.getElementById('fileBtn');
   const fileCard = document.getElementById('fileCard');
@@ -140,6 +140,7 @@ function createFileScreen({ getPeer, onSent }) {
         signal: currentController.signal,
       });
       // Ийгиликтүү болсо, түз башкы экранга кайтабыз (абал көрсөткүчү "Аяктады" дейт)
+      if (window.logSent) logSent('file');
       back();
       if (onSent) onSent('✓ Файл жөнөтүлдү');
     } catch (error) {
@@ -181,6 +182,7 @@ function createFileScreen({ getPeer, onSent }) {
     clearMessage();
     statusCard.hidden = true;
     fileCard.hidden = false;
+    if (onOpen) onOpen();
   }
 
   function back() {
@@ -188,6 +190,7 @@ function createFileScreen({ getPeer, onSent }) {
     clearMessage();
     fileCard.hidden = true;
     statusCard.hidden = false;
+    if (onClose) onClose();
   }
 
   // Компьютерден келген билдирүү (мисалы "алдым" жообу)
@@ -201,5 +204,5 @@ function createFileScreen({ getPeer, onSent }) {
   sendButton.addEventListener('click', send);
   backButton.addEventListener('click', back);
 
-  return { show, hide, handleMessage };
+  return { show, hide, handleMessage, back, isBusy: () => controller !== null };
 }

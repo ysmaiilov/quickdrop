@@ -5,7 +5,7 @@ const MAX_TEXT_BYTES = 16000; // DataChannel билдирүүсү үчүн ко�
 const ACK_TIMEOUT_MS = 5000; // компьютер "алдым" дебесе, канча күтөбүз
 
 // getPeer: учурдагы WebRTC байланышын кайтарган функция
-function createTextSender({ getPeer, onSent }) {
+function createTextSender({ getPeer, onSent, onOpen, onClose }) {
   const statusCard = document.getElementById('statusCard');
   const textButton = document.getElementById('textBtn');
   const textCard = document.getElementById('textCard');
@@ -73,6 +73,7 @@ function createTextSender({ getPeer, onSent }) {
     statusCard.hidden = true;
     textCard.hidden = false;
     textInput.focus();
+    if (onOpen) onOpen();
   }
 
   // "← Артка" басылганда
@@ -82,6 +83,7 @@ function createTextSender({ getPeer, onSent }) {
     setSending(false);
     textCard.hidden = true;
     statusCard.hidden = false;
+    if (onClose) onClose();
   }
 
   // "Жөнөтүү" же "Кайра аракет кылуу" басылганда
@@ -128,6 +130,7 @@ function createTextSender({ getPeer, onSent }) {
       setSending(false);
       textInput.value = '';
       reportTransferStatus('completed', { name: TRANSFER_NAME });
+      if (window.logSent) logSent('text');
       back(); // башкы экранга кайтабыз
       if (onSent) onSent('✓ Текст жөнөтүлдү');
     }
@@ -137,5 +140,5 @@ function createTextSender({ getPeer, onSent }) {
   sendButton.addEventListener('click', send);
   backButton.addEventListener('click', back);
 
-  return { show, hide, handleMessage };
+  return { show, hide, handleMessage, back, isBusy: () => textInput.disabled };
 }

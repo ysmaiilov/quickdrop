@@ -10,6 +10,15 @@ const BLOCKED_EXTENSIONS = new Set([
   'exe', 'msi', 'msp', 'bat', 'cmd', 'com', 'scr', 'pif', 'lnk',
   'vbs', 'vbe', 'js', 'jse', 'wsf', 'wsh', 'hta', 'ps1', 'psm1',
   'reg', 'dll', 'cpl', 'inf', 'jar', 'sh', 'command', 'dmg', 'pkg', 'app', 'apk',
+  // Кошумча скрипттер жана орнотуучулар (Windows / Linux / macOS / Android)
+  'py', 'pyw', 'pl', 'rb', 'php', 'cgi', 'mjs', 'cjs', 'vb', 'ws', 'url', 'scf',
+  'msix', 'msixbundle', 'appx', 'appxbundle', 'msc', 'gadget', 'application', 'appref-ms',
+  'deb', 'rpm', 'run', 'bin', 'appimage', 'desktop', 'flatpakref', 'snap',
+  'ipa', 'xapk', 'aab', 'workflow', 'action', 'scpt', 'terminal',
+  // Макросу бар Office документтери
+  'docm', 'dotm', 'xlsm', 'xltm', 'xlam', 'pptm', 'potm', 'ppam', 'sldm',
+  // Браузерде ачылганда скрипт иштеткен файлдар
+  'html', 'htm', 'xhtml', 'svg', 'swf',
 ]);
 
 // Windows'ттун атайын аттары (CON, NUL, COM1 ...): алар файл ат катары иштебейт

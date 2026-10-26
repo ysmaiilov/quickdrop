@@ -57,7 +57,7 @@ HTTPS/WSS хосттун proxy'си аркылуу берилиши керек.
 | `SERVE_CLIENT` | `0` | client файлдарын бербейт, `/` → `QuickDrop signaling server` |
 | `PUBLIC_URL` | `https://quickdrop.netlify.app` | Netlify дареги: QR шилтемеси ушундан түзүлөт, origin автоматтык уруксат алат |
 | `ALLOWED_HOSTS` | `quickdrop-api.onrender.com` | ушул сервердин домени (Host header, үтүр менен; стандарттуу эмес порт болсо `host:port`) |
-| `TRUST_PROXY` | `1` | proxy артында `X-Forwarded-For` / `X-Forwarded-Proto` колдонулат |
+| `TRUST_PROXY` | `1` | proxy артында `X-Forwarded-For` / `X-Forwarded-Proto` колдонулат; `NODE_ENV=production` менен бирге HTTP суроолору HTTPS'ке (308) багытталат, `ws://` кабыл алынбайт (`wss://` гана) |
 | `ALLOWED_ORIGINS` | `https://quickdrop.example.com` | кошумча frontend origin'дер (керек болсо, үтүр менен) |
 | `PORT` | хост өзү коёт | |
 

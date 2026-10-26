@@ -39,14 +39,37 @@ function showSentNotice(text) {
   }, SENT_NOTICE_MS);
 }
 
-const textSender = createTextSender({ getPeer: () => peer, onSent: showSentNotice });
-const imageSender = createImageSender({ getPeer: () => peer, onSent: showSentNotice });
-const fileScreen = createFileScreen({ getPeer: () => peer, onSent: showSentNotice });
+// ----- Телефондун "Артка" баскычы (history) -----
+// Байланыш түзүлгөндө тарыхка "home" жазуу кошулат, ар бир экран (текст/сүрөт/файл) ачылганда "sheet" кошулат.
+// Артка: экрандан башкы экранга, башкы экрандан болсо "Байланышты үзөсүзбү?" деп сурайт.
+let sheetOpen = false; // текст/сүрөт/файл экраны ачыкпы
+let closingFromBack = false; // экранды системанын "Артка" баскычы жапты (history'ге кайра тийбейбиз)
+let ignoreNextPop = false; // history.back()'ти өзүбүз чакырдык
+
+function handleSheetOpen() {
+  sheetOpen = true;
+  history.pushState({ qd: 'sheet' }, '');
+}
+
+function handleSheetClose() {
+  if (!sheetOpen) return;
+  sheetOpen = false;
+  if (closingFromBack) return; // системанын "Артка" баскычы тарыхты өзү кыскарткан
+  ignoreNextPop = true;
+  history.back(); // экрандагы "← Артка" кнопкасы: тарыхтагы "sheet" жазууну алып салабыз
+}
+
+const sheetCallbacks = { onSent: showSentNotice, onOpen: handleSheetOpen, onClose: handleSheetClose };
+const textSender = createTextSender({ getPeer: () => peer, ...sheetCallbacks });
+const imageSender = createImageSender({ getPeer: () => peer, ...sheetCallbacks });
+const fileScreen = createFileScreen({ getPeer: () => peer, ...sheetCallbacks });
+const sheets = [textSender, imageSender, fileScreen];
 
 // 💻 Компьютер → 📱 Телефон: компьютерден келген маалыматты алуу (received.js)
 const inbox = createReceiver({
   send: (message) => (peer ? peer.send(message) : false),
   maxFileBytes: MAX_MOBILE_FILE_BYTES, // телефондун эс тутуму үчүн азыраак чек
+  allowImageCopy: false, // телефондо сүрөттү "Көчүрүү" жок, "Сактоо" гана
   ids: {
     section: 'inbox',
     status: 'inboxStatus',
@@ -337,6 +360,9 @@ function showConnected() {
     directionLabel.hidden = false;
   inbox.show();
   connectionBar.hidden = false;
+
+  // Системанын "Артка" баскычын кармап калуу үчүн тарыхка "home" жазуусун кошобуз
+  history.pushState({ qd: 'home' }, '');
 }
 
 /* ===================== БАЙЛАНЫШТЫ АЯКТОО ===================== */
@@ -371,12 +397,53 @@ function finishWithError(error) {
 // "Байланышты үзүү" кнопкасы
 function disconnect() {
   if (ended || !joined) return;
+  if (!window.confirm(t('Байланышты үзгүңүз келеби?'))) return; // кокус басылып кетпесин
+  doDisconnect();
+}
+
+function doDisconnect() {
+  if (ended || !joined) return;
   appLog('Колдонуучу байланышты үздү');
 
   // Алгач компьютерге билдиребиз, анан баарын жабабыз
   sendToServer({ type: 'disconnect' });
   finishWithError(ERRORS.self_disconnected);
 }
+
+// Бетти жаңыртса же жапса, байланыш үзүлөт: браузер алгач сурайт
+window.addEventListener('beforeunload', (event) => {
+  if (ended || !joined) return;
+  event.preventDefault();
+  event.returnValue = '';
+});
+
+// Телефондун (браузердин) "Артка" баскычы
+window.addEventListener('popstate', () => {
+  if (ignoreNextPop) {
+    ignoreNextPop = false;
+    return;
+  }
+  if (ended || !joined || !peer) return; // байланыш жок: браузер өзү иштейт
+
+  if (sheetOpen) {
+    const active = sheets.find((sheet) => sheet.isBusy());
+    if (active) {
+      history.pushState({ qd: 'sheet' }, ''); // жөнөтүү жүрүп жатат: экранда калабыз
+      return;
+    }
+    closingFromBack = true;
+    sheets.forEach((sheet) => sheet.back());
+    closingFromBack = false;
+    return;
+  }
+
+  // Башкы экрандан "Артка": байланышты үзүүнү сурайбыз
+  if (window.confirm(t('Байланышты үзгүңүз келеби?'))) {
+    doDisconnect();
+  } else {
+    history.pushState({ qd: 'home' }, ''); // сайтта калабыз
+  }
+});
 
 connectButton.addEventListener('click', connect);
 disconnectButton.addEventListener('click', disconnect);

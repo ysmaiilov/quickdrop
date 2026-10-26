@@ -71,6 +71,15 @@ function setPhase(phase) {
   newQrButton.disabled = phase === 'loading';
 }
 
+// Бетти жаңыртса (F5, Ctrl+R) же жапса, байланыш жана алынган маалымат жоголот: браузер алгач сурайт.
+// (Браузерлер өз стандарттуу тексттерин көрсөтөт, өзүбүздүкүн коюуга болбойт.)
+window.addEventListener('beforeunload', (event) => {
+  const active = ['approving', 'connecting', 'connected'].includes(state.phase);
+  if (!active) return;
+  event.preventDefault();
+  event.returnValue = '';
+});
+
 /* ===================== СЕРВЕР МЕНЕН БАЙЛАНЫШ ===================== */
 
 // Серверден жаңы session сурайт
@@ -259,6 +268,7 @@ function resetTexts() {
   infoElement.textContent = DEFAULT_INFO;
   receiver.reset();
   sendPanel.hide();
+  if (window.clearSendHistory) clearSendHistory();
 }
 
 /* ===================== БИЛДИРҮҮ ЖАНА ТАЙМЕР ===================== */
@@ -374,6 +384,7 @@ function handlePeerDisconnected(message) {
 // "Байланышты үзүү" кнопкасы
 function disconnect() {
   if (!state.sessionId) return;
+  if (!window.confirm(t('Байланышты үзгүңүз келеби?'))) return; // кокус басылып кетпесин
   appLog('Колдонуучу байланышты үздү');
 
   // Алгач телефонго билдиребиз, анан баарын тазалайбыз

@@ -105,6 +105,10 @@ if (IS_PRODUCTION || !SERVE_CLIENT) {
   }
 }
 
+// Production'до жана proxy (HTTPS терминатор) артында HTTP суроолору HTTPS'ке багытталат, ws:// четке кагылат.
+// Proxy жок болсо (TRUST_PROXY=0), шифрленгенди аныктоого болбойт: бул режим өчүк (жергиликтүү иштетүү).
+const REQUIRE_HTTPS = IS_PRODUCTION && TRUST_PROXY;
+
 const CLIENT_DIR = path.resolve(__dirname, '..', 'client');
 const CLIENT_ROOT = CLIENT_DIR + path.sep; // префикс текшерүү үчүн (client-evil сыяктуу папкалар өтпөсүн)
 
@@ -905,6 +909,13 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    // Production'до HTTP аркылуу келген суроо HTTPS'ке багытталат (signaling шифрленген болушу керек)
+    if (REQUIRE_HTTPS && !isSecureRequest(req) && isAllowedHost(req.headers.host)) {
+      res.writeHead(308, { Location: `https://${req.headers.host}${req.url}` });
+      res.end();
+      return;
+    }
+
     // Белгисиз Host (DNS rebinding) кабыл алынбайт
     if (!isAllowedHost(req.headers.host)) {
       res.writeHead(421, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -960,6 +971,12 @@ server.on('upgrade', (req, socket, head) => {
   const urlPath = (req.url || '').split('?')[0];
   if (urlPath !== '/ws') {
     socket.destroy();
+    return;
+  }
+
+  // Production'до шифрленбеген ws:// кабыл алынбайт (wss:// гана)
+  if (REQUIRE_HTTPS && !isSecureRequest(req)) {
+    rejectUpgrade(socket, 426, 'Upgrade Required');
     return;
   }
 

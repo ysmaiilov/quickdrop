@@ -26,7 +26,7 @@ function getReceiveErrorText(kind, reason) {
 // send: телефонго JSON билдирүү жөнөтүүчү функция (true/false кайтарат)
 // ids: HTML элементтеринин id'лери (компьютер үчүн демейки, телефон өзүнүкүн берет)
 // maxFileBytes: бир файлдын эң чоң көлөмү (телефондо азыраак)
-function createReceiver({ send, ids = {}, maxFileBytes = MAX_FILE_BYTES }) {
+function createReceiver({ send, ids = {}, maxFileBytes = MAX_FILE_BYTES, allowImageCopy = true }) {
   const elementIds = {
     section: 'received',
     status: 'receivedStatus',
@@ -233,6 +233,7 @@ function createReceiver({ send, ids = {}, maxFileBytes = MAX_FILE_BYTES }) {
     image.className = 'received__image';
     image.src = url;
     image.alt = safeName;
+    image.setAttribute('data-no-i18n', '');
     // Браузер форматты көрсөтө албаса (мисалы HEIC), preview'ду жашырабыз
     image.addEventListener('error', () => {
       image.hidden = true;
@@ -241,10 +242,13 @@ function createReceiver({ send, ids = {}, maxFileBytes = MAX_FILE_BYTES }) {
     const meta = document.createElement('p');
     meta.className = 'received__meta';
     meta.textContent = `${safeName} · ${formatFileSize(file.size)}`;
+    meta.setAttribute('data-no-i18n', '');
 
     const actions = document.createElement('div');
     actions.className = 'received__actions';
-    actions.append(createImageCopyButton(file.blob), createSaveLink(url, safeName));
+    // Сүрөттү көчүрүү кнопкасы компьютерде гана (телефондо "Сактоо" гана болот)
+    if (allowImageCopy) actions.append(createImageCopyButton(file.blob));
+    actions.append(createSaveLink(url, safeName));
 
     item.append(image, meta, actions);
     listElement.prepend(item);
@@ -270,6 +274,7 @@ function createReceiver({ send, ids = {}, maxFileBytes = MAX_FILE_BYTES }) {
     const nameElement = document.createElement('p');
     nameElement.className = 'received__file-name';
     nameElement.textContent = safeName;
+    nameElement.setAttribute('data-no-i18n', '');
 
     const meta = document.createElement('p');
     meta.className = 'received__meta';
@@ -308,6 +313,7 @@ function createReceiver({ send, ids = {}, maxFileBytes = MAX_FILE_BYTES }) {
     const textElement = document.createElement('p');
     textElement.className = 'received__text';
     textElement.textContent = text;
+    textElement.setAttribute('data-no-i18n', '');
 
     const copyButton = document.createElement('button');
     copyButton.type = 'button';
