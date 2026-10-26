@@ -16,6 +16,13 @@
       <h1 class="brand__name">QuickDrop</h1>
     </header>
 
+    <!-- Туташуу учурундагы кичине статус сызыгы: абал жана "Байланышты үзүү" -->
+    <div class="conn-bar" id="connBar" data-phase="connecting" hidden>
+      <span class="conn-bar__dot" aria-hidden="true"></span>
+      <span class="conn-bar__text" id="connBarText" role="status" aria-live="polite">Туташууда...</span>
+      <button class="conn-bar__btn" id="disconnectBtn" type="button">Байланышты үзүү</button>
+    </div>
+
     <!-- Байланыштын абалы -->
     <div class="status-badge" id="statusBadge" data-tone="neutral" role="status" aria-live="polite">
       <span class="status-badge__icon" id="statusBadgeIcon" aria-hidden="true">⏳</span>
@@ -24,7 +31,7 @@
     </div>
 
     <!-- Туташтыруу картасы: QR-код негизги элемент -->
-    <section class="connect">
+    <section class="connect" id="connectCard">
       <p class="connect__title" id="title">📱 Телефонду туташтырыңыз</p>
 
       <!-- QR-код ушул жерге чийилет -->
@@ -46,7 +53,6 @@
       <p class="message" id="message" role="alert" hidden></p>
 
       <button class="btn" id="newQrBtn" type="button">Жаңы QR-код</button>
-      <button class="btn btn--danger" id="disconnectBtn" type="button" hidden>Байланышты үзүү</button>
 
       <!-- Телефон туташууну сураганда гана көрүнөт -->
       <div class="actions" id="approvalActions" hidden>

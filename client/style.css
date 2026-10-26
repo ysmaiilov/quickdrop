@@ -16,6 +16,7 @@
   --color-primary-soft: #eff6ff;
   --color-primary-line: #bfdbfe;
 
+  --color-success: #16a34a;
   --color-success-soft: #dcfce7;
   --color-success-line: #bbf7d0;
   --color-success-text: #166534;
@@ -187,6 +188,85 @@ body {
   border-right-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+/* Туташкандан кийин чоң белги керек эмес: абалды кичине статус сызыгы көрсөтөт */
+body[data-state='connected'] .status-badge {
+  display: none;
+}
+
+/* ===== Туташуу учурундагы кичине статус сызыгы (компьютер) ===== */
+.conn-bar {
+  position: sticky;
+  top: max(8px, env(safe-area-inset-top));
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 6px 6px 6px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: rise 0.28s var(--ease);
+}
+
+.conn-bar__dot {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  animation: pulse-ring 1.6s ease-out infinite;
+}
+
+.conn-bar[data-phase='connected'] .conn-bar__dot {
+  background: var(--color-success);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+  animation: none;
+}
+
+/* Бир сапта турат: орун жетпесе текст "..." менен кыскарат, баскыч кысылбайт */
+.conn-bar__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Кичине, тынч баскыч (кызыл контур гана): кокусунан басылып кетпесин */
+.conn-bar__btn {
+  flex-shrink: 0;
+  min-height: 34px;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-danger-text);
+  background: transparent;
+  border: 1px solid var(--color-danger-line);
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.conn-bar__btn:hover {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-text);
+}
+
+.conn-bar__btn:focus-visible {
+  outline: 3px solid rgba(185, 28, 28, 0.3);
+  outline-offset: 2px;
 }
 
 /* ===== Карточкалар ===== */
@@ -1091,6 +1171,20 @@ body[data-state='disconnected'] .status-icon {
 
   .card-head__route {
     min-width: 66px;
+  }
+
+  .conn-bar {
+    gap: 6px;
+    padding: 5px 5px 5px 10px;
+  }
+
+  .conn-bar__text {
+    font-size: 0.8125rem;
+  }
+
+  .conn-bar__btn {
+    padding-inline: 9px;
+    font-size: 0.75rem;
   }
 }
 

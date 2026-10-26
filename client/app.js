@@ -10,6 +10,9 @@ const qrElement = document.getElementById('qr');
 const timerElement = document.getElementById('timer');
 const messageElement = document.getElementById('message');
 const newQrButton = document.getElementById('newQrBtn');
+const connectCard = document.getElementById('connectCard');
+const connectionBar = document.getElementById('connBar');
+const connectionBarText = document.getElementById('connBarText');
 const disconnectButton = document.getElementById('disconnectBtn');
 const approvalActions = document.getElementById('approvalActions');
 const approveButton = document.getElementById('approveBtn');
@@ -57,7 +60,12 @@ function setPhase(phase) {
   const inConnection = phase === 'connecting' || phase === 'connected';
   const approving = phase === 'approving';
 
-  disconnectButton.hidden = !inConnection;
+  // Туташуу учурунда жогоруда кичине статус сызыгы ("Байланышты үзүү" ушунда).
+  // Туташкандан кийин QR картасы жашырылат: экранды жөнөтүү жана алуу панелдери ээлейт.
+  connectionBar.hidden = !inConnection;
+  connectionBar.dataset.phase = phase;
+  connectionBarText.textContent = phase === 'connected' ? 'Телефон туташты' : 'Туташууда...';
+  connectCard.hidden = phase === 'connected';
   approvalActions.hidden = !approving;
   newQrButton.hidden = inConnection || approving;
   newQrButton.disabled = phase === 'loading';
@@ -438,9 +446,8 @@ function handlePeerConnected() {
   appLog('WebRTC туташты ✓');
   setPhase('connected');
   statusBadge.set('connected', 'Телефон менен түз байланыш даяр');
-      showQrStatus('✓', '✓ Телефон туташты', 'Телефон менен түз байланыш түзүлдү. Эми маалымат жөнөтсөңүз болот.');
   receiver.show();
-    sendPanel.show();
+  sendPanel.show();
 }
 
 /* ===================== НЕГИЗГИ ЛОГИКА ===================== */
