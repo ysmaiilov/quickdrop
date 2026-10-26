@@ -191,7 +191,7 @@ body {
 }
 
 /* Туташкандан кийин чоң белги керек эмес: абалды кичине статус сызыгы көрсөтөт */
-body[data-state='connected'] .status-badge {
+.conn-bar:not([hidden]) ~ .status-badge[data-state='connected'] {
   display: none;
 }
 

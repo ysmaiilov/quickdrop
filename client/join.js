@@ -209,7 +209,13 @@ function connect() {
   });
 
   socket.addEventListener('message', (event) => {
-    handleMessage(JSON.parse(event.data));
+    let message;
+    try {
+      message = JSON.parse(event.data);
+    } catch (error) {
+      return;
+    }
+    if (message && typeof message === 'object') handleMessage(message);
   });
 
   socket.addEventListener('close', () => {

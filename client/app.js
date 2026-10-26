@@ -258,7 +258,7 @@ function resetTexts() {
   titleElement.textContent = DEFAULT_TITLE;
   infoElement.textContent = DEFAULT_INFO;
   receiver.reset();
-    sendPanel.hide();
+  sendPanel.hide();
 }
 
 /* ===================== БИЛДИРҮҮ ЖАНА ТАЙМЕР ===================== */
@@ -399,7 +399,7 @@ function handlePhoneRequest(message) {
   hideMessage();
   setPhase('approving');
   statusBadge.set('connecting', 'Телефон уруксат сурап жатат');
-    // Кодду чоң кылып QR ордунда көрсөтөбүз
+  // Кодду чоң кылып QR ордунда көрсөтөбүз
   showQrStatus(
     code,
     'Телефон туташууну сурап жатат',

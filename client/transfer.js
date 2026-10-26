@@ -218,7 +218,7 @@ function createFileSender({ getPeer }) {
 // onStart(meta), onProgress(meta, received), onComplete(file), onError(meta, reason)
 function createFileReceiver({ send, accept, onStart, onProgress, onComplete, onError }) {
   let current = null; // учурда алынып жаткан файл
-    receiveActiveCheck = () => current !== null;
+  receiveActiveCheck = () => current !== null;
   let idleTimer = null;
 
   function stopIdleTimer() {
@@ -277,9 +277,9 @@ function createFileReceiver({ send, accept, onStart, onProgress, onComplete, onE
     // Бир убакта бир гана файл алабыз: жаңысын кабыл албайбыз
 
     if (current || activeSend) {
-  send({ type: 'file:error', id, reason: 'busy' });
-  return;
-}
+      send({ type: 'file:error', id, reason: 'busy' });
+      return;
+    }
 
     if (size > MAX_FILE_BYTES) {
       send({ type: 'file:error', id, reason: 'too_large' });

@@ -51,7 +51,7 @@ function createPeer({
   let channel = null;
   let connected = false;
   let closed = false;
-    let disconnectTimerId = null;
+  let disconnectTimerId = null;
 
   const role = isInitiator ? 'компьютер' : 'телефон';
   rtcLog(`${role}: RTCPeerConnection түзүлдү`);
@@ -103,12 +103,11 @@ function createPeer({
     channel.addEventListener('message', (event) => {
       // Тексттик билдирүү = JSON
       if (typeof event.data === 'string') {
-                if (event.data.length > MAX_JSON_MESSAGE_CHARS) {
+        if (event.data.length > MAX_JSON_MESSAGE_CHARS) {
           rtcLog('Өтө чоң билдирүү алынды, этибарга алынган жок');
           return;
         }
         try {
-          
           const message = JSON.parse(event.data);
           rtcLog('Билдирүү алынды:', message.type); // мазмунун логдобойбуз
           if (onMessage) onMessage(message);
@@ -232,8 +231,6 @@ function createPeer({
   }
 
   // Буфер бошонгончо күтөт (backpressure).
-  // Канал жабылса, ката менен токтойт.
-  // Буфер бошонгончо күтөт (backpressure).
   // Канал жабылса же убакыт өтүп кетсе, ката менен токтойт.
   function waitForDrain() {
     return new Promise((resolve, reject) => {
@@ -285,7 +282,7 @@ function createPeer({
     if (closed) return;
     closed = true;
     clearTimeout(timeoutId);
-        clearTimeout(disconnectTimerId);
+    clearTimeout(disconnectTimerId);
     if (channel) channel.close();
     pc.close();
     rtcLog('Байланыш жабылды');
