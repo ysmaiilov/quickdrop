@@ -9,6 +9,7 @@ const titleElement = document.getElementById('title');
 const infoElement = document.getElementById('info');
 const messageElement = document.getElementById('message');
 const connectButton = document.getElementById('connectBtn');
+const connectionBar = document.getElementById('connBar');
 const disconnectButton = document.getElementById('disconnectBtn');
 
 // URL: /join/КОД -> КОД
@@ -134,7 +135,7 @@ function render({ icon, title, info = '', message = '', type = 'error', showButt
   fileScreen.hide();
     inbox.reset();
   directionLabel.hidden = true;
-  disconnectButton.hidden = true;
+  connectionBar.hidden = true;
 
   iconElement.textContent = icon;
     iconElement.classList.toggle('status-icon--code', isCode); // тастыктоо коду чоң көрүнөт
@@ -320,7 +321,7 @@ function showConnected() {
   fileScreen.show();
     directionLabel.hidden = false;
   inbox.show();
-  disconnectButton.hidden = false;
+  connectionBar.hidden = false;
 }
 
 /* ===================== БАЙЛАНЫШТЫ АЯКТОО ===================== */

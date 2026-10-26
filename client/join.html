@@ -14,6 +14,13 @@
       <h1 class="brand__name">QuickDrop</h1>
     </header>
 
+    <!-- Туташкандан кийинки кичине статус сызыгы: "Байланышты үзүү" ушунда -->
+    <div class="conn-bar" id="connBar" data-phase="connected" hidden>
+      <span class="conn-bar__dot" aria-hidden="true"></span>
+      <span class="conn-bar__text" role="status" aria-live="polite">Компьютер туташты</span>
+      <button class="conn-bar__btn" id="disconnectBtn" type="button">Байланышты үзүү</button>
+    </div>
+
     <!-- Байланыштын абалы -->
     <div class="status-badge" id="statusBadge" data-tone="neutral" role="status" aria-live="polite">
       <span class="status-badge__icon" id="statusBadgeIcon" aria-hidden="true">⏳</span>
@@ -49,8 +56,6 @@
           <span>Файл</span>
         </button>
       </div>
-
-      <button class="btn btn--danger" id="disconnectBtn" type="button" hidden>Байланышты үзүү</button>
     </section>
 
     <!-- Текст жөнөтүү -->
