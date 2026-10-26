@@ -1095,6 +1095,13 @@ body[data-state='disconnected'] .status-icon {
   transform: scale(0.97);
 }
 
+/* Сүрөттүн "Көчүрүү" жана "Сактоо" кнопкалары катар турат */
+.received__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* ===== Төмөнкү артыкчылыктар ===== */
 .features {
   display: flex;

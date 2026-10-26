@@ -173,6 +173,54 @@ function createReceiver({ send, ids = {}, maxFileBytes = MAX_FILE_BYTES }) {
     return saveLink;
   }
 
+  // Сүрөттү PNG кылат: алмашуу буферине браузерлер PNG'ни гана ишенимдүү кабыл алат
+  function toPngBlob(blob) {
+    if (blob.type === 'image/png') return Promise.resolve(blob);
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        canvas.getContext('2d').drawImage(image, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((png) => (png ? resolve(png) : reject(new Error('png_failed'))), 'image/png');
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('decode_failed'));
+      };
+      image.src = url;
+    });
+  }
+
+  // "Көчүрүү" кнопкасы: сүрөттү алмашуу буферине салат
+  function createImageCopyButton(blob) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'received__copy';
+    button.textContent = 'Көчүрүү';
+
+    const flash = (text) => {
+      button.textContent = text;
+      setTimeout(() => {
+        button.textContent = 'Көчүрүү';
+      }, 1500);
+    };
+
+    button.addEventListener('click', async () => {
+      try {
+        // Safari колдонуучунун басуусунан кийин гана жазууга уруксат берет: promise'ти түз беребиз
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': toPngBlob(blob) })]);
+        flash('✓ Көчүрүлдү');
+      } catch (error) {
+        flash('Көчүрүү мүмкүн эмес');
+      }
+    });
+    return button;
+  }
+
   // Тизменин башына сүрөттү preview жана "Сактоо" кнопкасы менен кошот
   function addImage(file, url) {
     // Сактоо аты сүрөттүн чыныгы түрүнө ылайык болот (virus.exe -> virus.png)
@@ -194,7 +242,11 @@ function createReceiver({ send, ids = {}, maxFileBytes = MAX_FILE_BYTES }) {
     meta.className = 'received__meta';
     meta.textContent = `${safeName} · ${formatFileSize(file.size)}`;
 
-    item.append(image, meta, createSaveLink(url, safeName));
+    const actions = document.createElement('div');
+    actions.className = 'received__actions';
+    actions.append(createImageCopyButton(file.blob), createSaveLink(url, safeName));
+
+    item.append(image, meta, actions);
     listElement.prepend(item);
   }
 

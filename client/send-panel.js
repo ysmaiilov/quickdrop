@@ -317,6 +317,28 @@ function createSendPanel({ getPeer }) {
     fileInput.click();
   });
 
+  /* ----- ВСТАВИТЬ (Ctrl+V): алмашуу буферинен сүрөт ----- */
+
+  // Буферде сүрөт болсо, аны тандалган файл кылат (скриншот же көчүрүлгөн сүрөт).
+  // Текст гана болсо, браузер өзү текст талаасына коёт.
+  document.addEventListener('paste', (event) => {
+    if (section.hidden) return;
+
+    const items = Array.from((event.clipboardData && event.clipboardData.items) || []);
+    const imageItem = items.find((item) => item.kind === 'file' && item.type.startsWith('image/'));
+    const file = imageItem ? imageItem.getAsFile() : null;
+    if (!file) return;
+
+    event.preventDefault();
+    if (controller || textSending) {
+      showMessage(fileMessage, ERROR_TEXTS.busy, 'error');
+      return;
+    }
+
+    selectTile('image');
+    selectFile(file);
+  });
+
   /* ----- Панелди көрсөтүү / жашыруу ----- */
 
   function show() {
