@@ -46,7 +46,9 @@ function createPeer({
   onMessage,
   onBinary,
 }) {
-  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  // Сервер берген STUN/TURN болсо, ошону; болбосо config.js же демейки STUN
+  const loaded = typeof getLoadedIceServers === 'function' ? getLoadedIceServers() : null;
+  const pc = new RTCPeerConnection({ iceServers: loaded || ICE_SERVERS });
   const pendingCandidates = []; // remote description келгенче сакталган ICE'лер
   let channel = null;
   let connected = false;

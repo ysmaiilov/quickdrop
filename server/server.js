@@ -109,6 +109,47 @@ if (IS_PRODUCTION || !SERVE_CLIENT) {
 // Proxy жок болсо (TRUST_PROXY=0), шифрленгенди аныктоого болбойт: бул режим өчүк (жергиликтүү иштетүү).
 const REQUIRE_HTTPS = IS_PRODUCTION && TRUST_PROXY;
 
+// TURN (ар кандай тармактагы түзмөктөрдү байланыштыруу үчүн өткөрүп берүүчү сервер).
+// Metered.ca (акысыз тариф): METERED_DOMAIN (мис. quickdrop.metered.live) жана METERED_API_KEY.
+// Ачкычтар клиентте сакталбайт: браузер аларды /api/ice аркылуу сервер аркылуу алат.
+const METERED_DOMAIN = (process.env.METERED_DOMAIN || '').trim();
+const METERED_API_KEY = (process.env.METERED_API_KEY || '').trim();
+const TURN_CONFIGURED = Boolean(METERED_DOMAIN && METERED_API_KEY);
+if (Boolean(METERED_DOMAIN) !== Boolean(METERED_API_KEY)) {
+  configWarning('TURN үчүн METERED_DOMAIN жана METERED_API_KEY экөө тең керек');
+}
+const ICE_CACHE_MS = 10 * 60 * 1000;
+let iceCache = { servers: null, expiresAt: 0 };
+
+// Browser'ге берилүүчү ICE серверлеринин тизмеси (STUN + TURN). Ката болсо null.
+async function loadIceServers() {
+  if (!TURN_CONFIGURED) return null;
+  if (iceCache.servers && Date.now() < iceCache.expiresAt) return iceCache.servers;
+
+  try {
+    const url = `https://${METERED_DOMAIN}/api/v1/turn/credentials?apiKey=${encodeURIComponent(METERED_API_KEY)}`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) throw new Error(`status ${response.status}`);
+    const data = await response.json();
+    // Күтүлгөн түр гана өткөрөбүз: [{ urls, username?, credential? }]
+    const servers = (Array.isArray(data) ? data : [])
+      .filter((item) => item && (typeof item.urls === 'string' || Array.isArray(item.urls)))
+      .slice(0, 10)
+      .map((item) => {
+        const server = { urls: item.urls };
+        if (typeof item.username === 'string') server.username = item.username;
+        if (typeof item.credential === 'string') server.credential = item.credential;
+        return server;
+      });
+    if (servers.length === 0) throw new Error('empty list');
+    iceCache = { servers, expiresAt: Date.now() + ICE_CACHE_MS };
+    return servers;
+  } catch (error) {
+    log(`[ice] TURN ачкычтарын алуу ийгиликсиз: ${error.message}`);
+    return null;
+  }
+}
+
 const CLIENT_DIR = path.resolve(__dirname, '..', 'client');
 const CLIENT_ROOT = CLIENT_DIR + path.sep; // префикс текшерүү үчүн (client-evil сыяктуу папкалар өтпөсүн)
 
@@ -203,6 +244,7 @@ function createRateLimiter({ windowMs, max }) {
 const limiters = {
   createSession: createRateLimiter({ windowMs: 60 * 1000, max: 10 }), // жаңы session
   checkSession: createRateLimiter({ windowMs: 60 * 1000, max: 60 }), // session текшерүү
+  iceServers: createRateLimiter({ windowMs: 60 * 1000, max: 30 }), // TURN ачкычтарын алуу
   wsConnect: createRateLimiter({ windowMs: 60 * 1000, max: 30 }), // WebSocket ачуу
   badJoin: createRateLimiter({ windowMs: 60 * 1000, max: 10 }), // ийгиликсиз кошулуу аракеттери
 };
@@ -489,6 +531,16 @@ function handleApi(req, res, urlPath) {
   }
 
   const ip = getClientIp(req);
+
+  // GET /api/ice -> STUN/TURN серверлери (TURN коюлган болсо)
+  if (req.method === 'GET' && urlPath === '/api/ice') {
+    if (!limiters.iceServers.hit(ip)) {
+      sendTooManyRequests(res, limiters.iceServers, ip);
+      return;
+    }
+    loadIceServers().then((iceServers) => sendJson(res, 200, { iceServers }));
+    return;
+  }
 
   // POST /api/sessions -> жаңы session түзүү
   if (req.method === 'POST' && urlPath === '/api/sessions') {
@@ -1011,6 +1063,7 @@ server.listen(PORT, () => {
     log(`QuickDrop иштеп жатат: http://localhost:${PORT}`);
   }
   if (PUBLIC_URL) log(`Public URL: ${PUBLIC_URL}`);
+  log(TURN_CONFIGURED ? 'TURN: күйгүзүлгөн (Metered)' : 'TURN: жок (STUN гана)');
   if (ALLOWED_HOSTS.size > 0) log(`Уруксат берилген хосттор: ${[...ALLOWED_HOSTS].join(', ')}`);
   if (ALLOWED_ORIGINS.size > 0) log(`Уруксат берилген origin'дер: ${[...ALLOWED_ORIGINS].join(', ')}`);
 });

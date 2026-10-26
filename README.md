@@ -78,13 +78,20 @@ Netlify'де `QUICKDROP_API_URL` жок, `http://` же localhost болсо bui
 Build `dist/_headers` түзөт: CSP (`connect-src` ичинде API жана WSS дареги), `X-Frame-Options`,
 `Referrer-Policy`, `Permissions-Policy` ж.б.
 
-### TURN жөнүндө эскертме
+### TURN (ар кандай тармактагы түзмөктөр үчүн)
 
-Демейки боюнча STUN гана колдонулат. Мобилдик тармактарда (CGNAT) жана катуу корпоративдик
-firewall артында STUN жетишсиз болушу мүмкүн — WebRTC туташпай калат. Анда TURN сервери керек.
-TURN кошсоңуз, ачкычтарды (`username`/`credential`) `QUICKDROP_ICE_SERVERS` аркылуу статикага
-**салбаңыз** (бардыгына ачык көрүнөт): аларды backend'ден кыска мөөнөттүү (мис. TURN REST API,
-HMAC менен) берүү керек.
+Демейки боюнча STUN гана колдонулат: ал бир Wi-Fi'да иштейт, бирок телефон мобилдик интернетте же башка
+тармакта болсо, WebRTC туташпай калат. Мындай учурда TURN (өткөрүп берүүчү сервер) керек.
+
+QuickDrop TURN ачкычтарын статикага салбайт: сервер аларды [Metered.ca](https://www.metered.ca) (акысыз тариф)
+аркылуу алат да, браузерге `GET /api/ice` аркылуу берет. Signaling серверине эки өзгөрмө кошуңуз:
+
+| Өзгөрмө | Мисал | Мааниси |
+|---|---|---|
+| `METERED_DOMAIN` | `quickdrop.metered.live` | Metered дашбордундагы "Your domain" |
+| `METERED_API_KEY` | `…` | Metered дашбордундагы API key (жашыруун сакталат) |
+
+Коюлбаса, STUN гана иштейт. Ишке киргенин серверди баштаганда логдон көрөсүз: `TURN: күйгүзүлгөн (Metered)`.
 
 ## Production'ду локалдык текшерүү
 
