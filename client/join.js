@@ -25,9 +25,23 @@ let joined = false; // телефон session'ге кошулдубу
 let ended = false; // байланыш аяктадыбы (ката же үзүү)
 
 // Жөнөтүү модулдары
-const textSender = createTextSender({ getPeer: () => peer });
-const imageSender = createImageSender({ getPeer: () => peer });
-const fileScreen = createFileScreen({ getPeer: () => peer });
+const SENT_NOTICE_MS = 3000; // "жөнөтүлдү" билдирүүсү канча секунд көрүнөт
+let sentNoticeTimer = null;
+
+// Башкы экрандагы кыска ийгилик билдирүүсү
+function showSentNotice(text) {
+  clearTimeout(sentNoticeTimer);
+  messageElement.textContent = text;
+  messageElement.className = 'message message--success';
+  messageElement.hidden = false;
+  sentNoticeTimer = setTimeout(() => {
+    messageElement.hidden = true;
+  }, SENT_NOTICE_MS);
+}
+
+const textSender = createTextSender({ getPeer: () => peer, onSent: showSentNotice });
+const imageSender = createImageSender({ getPeer: () => peer, onSent: showSentNotice });
+const fileScreen = createFileScreen({ getPeer: () => peer, onSent: showSentNotice });
 
 // 💻 Компьютер → 📱 Телефон: компьютерден келген маалыматты алуу (received.js)
 const inbox = createReceiver({
@@ -135,6 +149,7 @@ function render({ icon, title, info = '', message = '', type = 'error', showButt
   fileScreen.hide();
     inbox.reset();
   directionLabel.hidden = true;
+  clearTimeout(sentNoticeTimer);
   connectionBar.hidden = true;
 
   iconElement.textContent = icon;

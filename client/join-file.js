@@ -3,7 +3,7 @@
 // түз компьютерге өтөт.
 
 // getPeer: учурдагы WebRTC байланышын кайтарган функция
-function createFileScreen({ getPeer }) {
+function createFileScreen({ getPeer, onSent }) {
   const statusCard = document.getElementById('statusCard');
   const fileButton = document.getElementById('fileBtn');
   const fileCard = document.getElementById('fileCard');
@@ -141,6 +141,7 @@ function createFileScreen({ getPeer }) {
       });
       // Ийгиликтүү болсо, түз башкы экранга кайтабыз (абал көрсөткүчү "Аяктады" дейт)
       back();
+      if (onSent) onSent('✓ Файл жөнөтүлдү');
     } catch (error) {
       // Экран жабылып же байланыш үзүлүп, өзүбүз токтоткон болсо, эч нерсе көрсөтпөйбүз
       if (currentController.signal.aborted) return;

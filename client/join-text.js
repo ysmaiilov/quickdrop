@@ -5,7 +5,7 @@ const MAX_TEXT_BYTES = 16000; // DataChannel билдирүүсү үчүн ко�
 const ACK_TIMEOUT_MS = 5000; // компьютер "алдым" дебесе, канча күтөбүз
 
 // getPeer: учурдагы WebRTC байланышын кайтарган функция
-function createTextSender({ getPeer }) {
+function createTextSender({ getPeer, onSent }) {
   const statusCard = document.getElementById('statusCard');
   const textButton = document.getElementById('textBtn');
   const textCard = document.getElementById('textCard');
@@ -129,6 +129,7 @@ function createTextSender({ getPeer }) {
       textInput.value = '';
       reportTransferStatus('completed', { name: TRANSFER_NAME });
       back(); // башкы экранга кайтабыз
+      if (onSent) onSent('✓ Текст жөнөтүлдү');
     }
   }
 

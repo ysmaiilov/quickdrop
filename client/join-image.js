@@ -2,7 +2,7 @@
 // Сүрөт сервер аркылуу эмес, WebRTC DataChannel аркылуу түз компьютерге өтөт.
 
 // getPeer: учурдагы WebRTC байланышын кайтарган функция
-function createImageSender({ getPeer }) {
+function createImageSender({ getPeer, onSent }) {
   const statusCard = document.getElementById('statusCard');
   const imageButton = document.getElementById('imageBtn');
   const imageCard = document.getElementById('imageCard');
@@ -155,6 +155,7 @@ function createImageSender({ getPeer }) {
       });
       // Ийгиликтүү болсо, түз башкы экранга кайтабыз (абал көрсөткүчү "Аяктады" дейт)
       back();
+      if (onSent) onSent('✓ Сүрөт жөнөтүлдү');
     } catch (error) {
       // Экран жабылып же байланыш үзүлүп, өзүбүз токтоткон болсо, эч нерсе көрсөтпөйбүз
       if (currentController.signal.aborted) return;
